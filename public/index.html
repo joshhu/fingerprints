@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FingerprintJS V4 指紋採集測試</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    
+    <!-- FingerprintJS V4 多重載入方案 -->
+    <script>
+        // FingerprintJS 載入管理器
+        class FingerprintLoader {
+            constructor() {
+                this.loaded = false;
+                this.loading = false;
+                this.loadPromise = null;
+            }
+            
+            async load() {
+                if (this.loaded) return true;
+                if (this.loading) return this.loadPromise;
+                
+                this.loading = true;
+                this.loadPromise = this.tryLoadSources();
+                return this.loadPromise;
+            }
+            
+            async tryLoadSources() {
+                const sources = [
+                    'lib/fingerprintjs.min.js', // 本地版本優先
+                    'https://openfpcdn.io/fingerprintjs/v4/iife.min.js',
+                    'https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.min.js',
+                    'https://unpkg.com/@fingerprintjs/fingerprintjs@4/dist/fp.min.js'
+                ];
+                
+                for (let i = 0; i < sources.length; i++) {
+                    const src = sources[i];
+                    console.log(`嘗試載入 FingerprintJS 來源 ${i + 1}/${sources.length}: ${src}`);
+                    
+                    try {
+                        await this.loadScript(src, 10000); // 10秒超時
+                        if (typeof FingerprintJS !== 'undefined') {
+                            console.log('FingerprintJS 載入成功:', src);
+                            this.loaded = true;
+                            return true;
+                        }
+                    } catch (error) {
+                        console.warn(`載入失敗 ${src}:`, error.message);
+                        continue;
+                    }
+                }
+                
+                throw new Error('所有 FingerprintJS 載入來源都失敗');
+            }
+            
+            loadScript(src, timeout = 10000) {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    const timeoutId = setTimeout(() => {
+                        script.remove();
+                        reject(new Error(`載入超時: ${src}`));
+                    }, timeout);
+                    
+                    script.onload = () => {
+                        clearTimeout(timeoutId);
+                        resolve();
+                    };
+                    
+                    script.onerror = () => {
+                        clearTimeout(timeoutId);
+                        script.remove();
+                        reject(new Error(`載入錯誤: ${src}`));
+                    };
+                    
+                    script.src = src;
+                    script.crossOrigin = 'anonymous';
+                    document.head.appendChild(script);
+                });
+            }
+        }
+        
+        // 全域載入器實例
+        window.fingerprintLoader = new FingerprintLoader();
+        
+        // 檢查 FingerprintJS 載入狀態
+        window.addEventListener('load', () => {
+            console.log('頁面載入完成');
+            console.log('FingerprintJS 狀態:', typeof FingerprintJS !== 'undefined' ? '已載入' : '未載入');
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="title-section">
+                    <h1>FingerprintJS V4 指紋採集測試</h1>
+                    <p>使用專業級瀏覽器指紋識別技術</p>
+                </div>
+                <div class="user-section" id="userSection">
+                    <!-- 用戶狀態將在這裡顯示 -->
+                </div>
+            </div>
+        </header>
+
+        <!-- 用戶認證表單 -->
+        <div class="auth-section" id="authSection" style="display: none;">
+            <!-- 登入表單 -->
+            <div class="auth-form" id="loginForm">
+                <h3>用戶登入</h3>
+                <div class="form-group">
+                    <label for="loginUsername">用戶名：</label>
+                    <input type="text" id="loginUsername" placeholder="請輸入用戶名">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密碼：</label>
+                    <input type="password" id="loginPassword" placeholder="請輸入密碼">
+                </div>
+                <div class="form-group recaptcha-container">
+                    <div id="loginRecaptcha"></div>
+                </div>
+                <div class="form-buttons">
+                    <button id="loginBtn" class="btn btn-primary">登入</button>
+                    <button id="showRegisterBtn" class="btn btn-secondary">註冊新帳號</button>
+                </div>
+            </div>
+
+            <!-- 註冊表單 -->
+            <div class="auth-form" id="registerForm" style="display: none;">
+                <h3>用戶註冊</h3>
+                <div class="form-group">
+                    <label for="registerUsername">用戶名：</label>
+                    <input type="text" id="registerUsername" placeholder="請輸入用戶名">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密碼：</label>
+                    <input type="password" id="registerPassword" placeholder="請輸入密碼">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">確認密碼：</label>
+                    <input type="password" id="confirmPassword" placeholder="請再次輸入密碼">
+                </div>
+                <div class="form-group recaptcha-container">
+                    <div id="registerRecaptcha"></div>
+                </div>
+                <div class="form-buttons">
+                    <button id="registerBtn" class="btn btn-primary">註冊</button>
+                    <button id="showLoginBtn" class="btn btn-secondary">已有帳號，登入</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="user-status" id="userStatus">
+            <span id="userStatusText">準備採集指紋...</span>
+        </div>
+
+        <div class="controls">
+            <button id="collectBtn" class="btn btn-primary">開始採集指紋</button>
+            <button id="clearBtn" class="btn btn-secondary">清除結果</button>
+            <button id="toggleAuthBtn" class="btn btn-secondary">用戶登入/註冊</button>
+        </div>
+
+        <div class="result-container">
+            <h2>採集到的指紋資料</h2>
+            
+            <!-- FingerprintJS V4 結果 -->
+            <div class="fingerprintjs-section">
+                <h3>FingerprintJS V4 結果</h3>
+                <div class="detail-item">
+                    <label>訪客 ID:</label>
+                    <span id="visitorId">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>信心度:</label>
+                    <span id="confidence">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>版本:</label>
+                    <span id="version">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>採集時間:</label>
+                    <span id="collectionTime">尚未採集</span>
+                </div>
+            </div>
+
+            <!-- 系統資訊 -->
+            <div class="system-info-section">
+                <h3>系統資訊</h3>
+                <div class="detail-item">
+                    <label>使用者代理:</label>
+                    <span id="userAgent">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>螢幕解析度:</label>
+                    <span id="screenResolution">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>瀏覽器視窗:</label>
+                    <span id="viewportSize">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>時區:</label>
+                    <span id="timezone">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>語言偏好:</label>
+                    <span id="language">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>作業系統:</label>
+                    <span id="platform">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>CPU 核心數:</label>
+                    <span id="hardwareConcurrency">尚未採集</span>
+                </div>
+                <div class="detail-item">
+                    <label>裝置記憶體:</label>
+                    <span id="deviceMemory">尚未採集</span>
+                </div>
+            </div>
+
+            <!-- 元件詳細資料 -->
+            <div class="components-section">
+                <h3>指紋元件詳細資料</h3>
+                <div class="detail-item">
+                    <label>元件總數:</label>
+                    <span id="totalComponents">0</span>
+                </div>
+                <div class="detail-item">
+                    <label>成功元件:</label>
+                    <span id="successfulComponents">0</span>
+                </div>
+                <div class="detail-item">
+                    <label>失敗元件:</label>
+                    <span id="failedComponents">0</span>
+                </div>
+                <div class="detail-item">
+                    <label>平均採集時間:</label>
+                    <span id="averageDuration">0ms</span>
+                </div>
+            </div>
+
+            <!-- 元件列表 -->
+            <div class="components-list">
+                <h3>元件列表</h3>
+                <div id="componentsList" class="components-grid">
+                    <!-- 元件將在這裡動態顯示 -->
+                </div>
+            </div>
+
+            <!-- 調試資訊 -->
+            <div class="debug-section">
+                <h3>調試資訊</h3>
+                <pre id="debugOutput">準備採集...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
