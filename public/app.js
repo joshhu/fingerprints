@@ -88,8 +88,10 @@ class FingerprintApp {
         const showLoginBtn = document.getElementById('showLoginBtn');
         const closeModalBtn = document.getElementById('closeModal');
         const authModal = document.getElementById('authModal');
+        const agreeBtn = document.getElementById('agreeBtn');
+        const disagreeBtn = document.getElementById('disagreeBtn');
 
-        collectBtn.addEventListener('click', () => this.collectFingerprint());
+        collectBtn.addEventListener('click', () => this.showPrivacyModal());
         clearBtn.addEventListener('click', () => this.clearResults());
         toggleAuthBtn.addEventListener('click', () => this.showAuthModal());
         loginBtn.addEventListener('click', () => this.login());
@@ -97,6 +99,8 @@ class FingerprintApp {
         showRegisterBtn.addEventListener('click', () => this.showRegisterForm());
         showLoginBtn.addEventListener('click', () => this.showLoginForm());
         closeModalBtn.addEventListener('click', () => this.closeAuthModal());
+        agreeBtn.addEventListener('click', () => this.agreeToPrivacy());
+        disagreeBtn.addEventListener('click', () => this.disagreeToPrivacy());
         
         // 點擊背景關閉彈出視窗
         authModal.addEventListener('click', (e) => {
@@ -104,11 +108,22 @@ class FingerprintApp {
                 this.closeAuthModal();
             }
         });
+
+        const privacyModal = document.getElementById('privacyModal');
+        privacyModal.addEventListener('click', (e) => {
+            if (e.target === privacyModal) {
+                this.closePrivacyModal();
+            }
+        });
         
         // ESC 鍵關閉彈出視窗
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && authModal.classList.contains('show')) {
-                this.closeAuthModal();
+            if (e.key === 'Escape') {
+                if (authModal.classList.contains('show')) {
+                    this.closeAuthModal();
+                } else if (privacyModal.classList.contains('show')) {
+                    this.closePrivacyModal();
+                }
             }
         });
     }
@@ -503,6 +518,32 @@ class FingerprintApp {
                 </div>
             `;
         }
+    }
+
+    // 顯示隱私同意視窗
+    showPrivacyModal() {
+        const privacyModal = document.getElementById('privacyModal');
+        privacyModal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // 關閉隱私同意視窗
+    closePrivacyModal() {
+        const privacyModal = document.getElementById('privacyModal');
+        privacyModal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // 同意隱私聲明
+    agreeToPrivacy() {
+        this.closePrivacyModal();
+        this.collectFingerprint();
+    }
+
+    // 不同意隱私聲明
+    disagreeToPrivacy() {
+        this.closePrivacyModal();
+        this.updateStatus('已取消指紋採集', 'ready');
     }
 
     // 顯示認證彈出視窗
