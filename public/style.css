@@ -573,6 +573,11 @@ header {
 .user-status.smart-correlation {
     background: linear-gradient(135deg, #ff6b6b, #ffa500);
     color: white;
+    text-align: left;
+    white-space: pre-line;
+    line-height: 1.8;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
 }
 
 .user-status.logged-in-user {

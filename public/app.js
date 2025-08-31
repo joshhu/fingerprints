@@ -381,7 +381,7 @@ class FingerprintApp {
                 if (data.isLoggedIn) {
                     // 已登入用戶
                     this.updateStatus(data.message, 'logged-in-user');
-                } else if (data.isGuest && data.matchedUser) {
+                } else if (data.isGuest && data.topMatches && data.topMatches.length > 0) {
                     // 未登入但找到相似用戶
                     this.updateStatus(data.message, 'smart-correlation');
                 } else if (data.isGuest) {

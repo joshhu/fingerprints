@@ -481,7 +481,7 @@ function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version,
 // 處理訪客的指紋(未登入)
 function handleGuestUserFingerprint(req, res, visitorId, confidence, version, components) {
 
-    // 比對現有所有指紋，找出相似度最高的
+    // 比對現有所有指紋，找出相似度最高的前5個
     db.all(
         'SELECT f.id, f.visitor_id, f.components, f.linked_user_id, a.username FROM fingerprints f LEFT JOIN accounts a ON f.linked_user_id = a.id',
         (err, allUsers) => {
@@ -490,38 +490,44 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
                 return res.status(500).json({ error: '資料庫查詢失敗' });
             }
 
-            let bestMatch = null;
-            let highestSimilarity = 0;
-            let matchedUsername = null;
-
-            // 檢查與所有現有指紋的相似度
+            // 計算與所有用戶的相似度並排序
+            const similarityResults = [];
+            
             for (const user of allUsers) {
                 const userComponents = JSON.parse(user.components || '{}');
                 const similarity = calculateSimilarity(userComponents, components || {});
                 
                 console.log(`與指紋 ID ${user.id} (用戶: ${user.username || '未登入'}) 相似度: ${similarity.toFixed(1)}%`);
                 
-                if (similarity > highestSimilarity) {
-                    highestSimilarity = similarity;
-                    bestMatch = user;
-                    matchedUsername = user.username;
+                if (similarity > 0) { // 只記錄有相似度的結果
+                    similarityResults.push({
+                        id: user.linked_user_id || user.id,
+                        username: user.username || `ID-${user.linked_user_id || user.id}`,
+                        fingerprintId: user.id,
+                        similarity: similarity
+                    });
                 }
             }
 
-            // **關鍵：返回相似度結果給前端**
-            if (bestMatch && highestSimilarity >= 70) { // 70% 以上顯示相似度
-                console.log(`訪客最相似的指紋: ID ${bestMatch.id}, 相似度: ${highestSimilarity.toFixed(1)}%`);
+            // 按相似度降序排序，取前5個
+            similarityResults.sort((a, b) => b.similarity - a.similarity);
+            const top5Matches = similarityResults.slice(0, 5);
+
+            // **關鍵：返回前5個最相似的用戶**
+            if (top5Matches.length > 0 && top5Matches[0].similarity >= 50) { // 50% 以上顯示相似度
+                console.log(`找到 ${top5Matches.length} 個相似用戶，最高相似度: ${top5Matches[0].similarity.toFixed(1)}%`);
+                
+                // 生成相似度列表訊息
+                const similarityList = top5Matches.map((match, index) => 
+                    `${index + 1}. 用戶${match.username}: ${match.similarity.toFixed(1)}%`
+                ).join('\n');
                 
                 // 不存儲訪客指紋，只返回比對結果
                 res.json({
                     isNewUser: true, // 訪客是新的，但找到相似的
-                    similarity: highestSimilarity,
-                    matchedUser: {
-                        id: bestMatch.linked_user_id,
-                        username: matchedUsername || `ID-${bestMatch.linked_user_id || bestMatch.id}`,
-                        fingerprintId: bestMatch.id
-                    },
-                    message: `你有 ${highestSimilarity.toFixed(1)}% 的可能性是用戶 ${matchedUsername || `ID-${bestMatch.linked_user_id || bestMatch.id}`}`,
+                    similarity: top5Matches[0].similarity,
+                    topMatches: top5Matches,
+                    message: `找到 ${top5Matches.length} 個相似用戶：\n${similarityList}`,
                     isGuest: true
                 });
             } else {
@@ -531,6 +537,7 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
                 res.json({
                     isNewUser: true,
                     similarity: 0,
+                    topMatches: [],
                     message: '完全新的訪客，沒有找到相似的指紋',
                     isGuest: true
                 });
