@@ -569,7 +569,12 @@ class MultiFingerprintApp {
 
     // 顯示多重指紋結果
     displayMultiFingerprintResults(data) {
-        const resultContainer = document.getElementById('resultContainer');
+        const resultContainer = document.getElementById('componentsList');
+        
+        if (!resultContainer) {
+            console.error('找不到 componentsList 元素');
+            return;
+        }
         
         let html = `
             <div class="fingerprintjs-section">
@@ -696,7 +701,6 @@ class MultiFingerprintApp {
         `;
 
         resultContainer.innerHTML = html;
-        resultContainer.style.display = 'block';
     }
 
     // 雜湊字串
@@ -884,9 +888,10 @@ class MultiFingerprintApp {
 
     // 清除結果
     clearResults() {
-        const resultContainer = document.getElementById('resultContainer');
-        resultContainer.innerHTML = '';
-        resultContainer.style.display = 'none';
+        const resultContainer = document.getElementById('componentsList');
+        if (resultContainer) {
+            resultContainer.innerHTML = '';
+        }
         this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
     }
 
