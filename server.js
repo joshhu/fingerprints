@@ -47,7 +47,7 @@ const db = new sqlite3.Database('fingerprints.db');
 
 // 建立資料表
 db.serialize(() => {
-    // 指紋資料表（重新命名為 fingerprints）
+    // 多重指紋資料表
     db.run(`
         CREATE TABLE IF NOT EXISTS fingerprints (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,6 +56,15 @@ db.serialize(() => {
             confidence_comment TEXT,
             version TEXT,
             components TEXT,
+            client_id TEXT,
+            custom_fingerprint TEXT,
+            canvas_fingerprint TEXT,
+            webgl_fingerprint TEXT,
+            audio_fingerprint TEXT,
+            fonts_fingerprint TEXT,
+            plugins_fingerprint TEXT,
+            hardware_fingerprint TEXT,
+            collection_time INTEGER,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
             linked_user_id INTEGER,
@@ -80,8 +89,69 @@ db.serialize(() => {
 console.log('伺服器運行在 http://localhost:' + PORT);
 console.log('FingerprintJS V4 指紋採集測試網站已啟動');
 
-// 計算指紋相似度函數
-function calculateSimilarity(oldComponents, newComponents) {
+// 計算多重指紋相似度函數
+function calculateMultiFingerprintSimilarity(oldData, newData) {
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    // 1. FingerprintJS V4 相似度 (權重 30%)
+    if (oldData.components && newData.components) {
+        const fpSimilarity = calculateFingerprintJSSimilarity(oldData.components, newData.components);
+        totalScore += fpSimilarity * 0.3;
+        maxScore += 100 * 0.3;
+    }
+    
+    // 2. Canvas 指紋相似度 (權重 20%)
+    if (oldData.canvas && newData.canvas) {
+        const canvasSimilarity = calculateCanvasSimilarity(oldData.canvas, newData.canvas);
+        totalScore += canvasSimilarity * 0.2;
+        maxScore += 100 * 0.2;
+    }
+    
+    // 3. WebGL 指紋相似度 (權重 15%)
+    if (oldData.webgl && newData.webgl) {
+        const webglSimilarity = calculateWebGLSimilarity(oldData.webgl, newData.webgl);
+        totalScore += webglSimilarity * 0.15;
+        maxScore += 100 * 0.15;
+    }
+    
+    // 4. 音訊指紋相似度 (權重 10%)
+    if (oldData.audio && newData.audio) {
+        const audioSimilarity = calculateAudioSimilarity(oldData.audio, newData.audio);
+        totalScore += audioSimilarity * 0.1;
+        maxScore += 100 * 0.1;
+    }
+    
+    // 5. 字體指紋相似度 (權重 10%)
+    if (oldData.fonts && newData.fonts) {
+        const fontsSimilarity = calculateFontsSimilarity(oldData.fonts, newData.fonts);
+        totalScore += fontsSimilarity * 0.1;
+        maxScore += 100 * 0.1;
+    }
+    
+    // 6. 硬體指紋相似度 (權重 10%)
+    if (oldData.hardware && newData.hardware) {
+        const hardwareSimilarity = calculateHardwareSimilarity(oldData.hardware, newData.hardware);
+        totalScore += hardwareSimilarity * 0.1;
+        maxScore += 100 * 0.1;
+    }
+    
+    // 7. 自定義指紋相似度 (權重 5%)
+    if (oldData.custom && newData.custom) {
+        const customSimilarity = calculateCustomSimilarity(oldData.custom, newData.custom);
+        totalScore += customSimilarity * 0.05;
+        maxScore += 100 * 0.05;
+    }
+    
+    if (maxScore === 0) {
+        return 0;
+    }
+    
+    return Math.round((totalScore / maxScore) * 100 * 10) / 10;
+}
+
+// 計算 FingerprintJS V4 相似度
+function calculateFingerprintJSSimilarity(oldComponents, newComponents) {
     const oldKeys = Object.keys(oldComponents);
     const newKeys = Object.keys(newComponents);
     
@@ -156,6 +226,134 @@ function calculateSimilarity(oldComponents, newComponents) {
     const finalSimilarity = (importantSimilarity * 0.7) + (basicSimilarity * 0.3);
     
     return Math.round(finalSimilarity * 10) / 10;
+}
+
+// 計算 Canvas 相似度
+function calculateCanvasSimilarity(oldCanvas, newCanvas) {
+    if (oldCanvas === newCanvas) {
+        return 100;
+    }
+    
+    // 簡單的雜湊比較
+    const oldHash = hashString(oldCanvas);
+    const newHash = hashString(newCanvas);
+    
+    if (oldHash === newHash) {
+        return 100;
+    }
+    
+    // 如果完全不同，返回 0
+    return 0;
+}
+
+// 計算 WebGL 相似度
+function calculateWebGLSimilarity(oldWebGL, newWebGL) {
+    if (!oldWebGL || !newWebGL) return 0;
+    
+    let matches = 0;
+    let total = 0;
+    
+    // 比較基本資訊
+    if (oldWebGL.renderer === newWebGL.renderer) matches++;
+    if (oldWebGL.vendor === newWebGL.vendor) matches++;
+    if (oldWebGL.version === newWebGL.version) matches++;
+    total += 3;
+    
+    // 比較擴展
+    const oldExtensions = oldWebGL.extensions || [];
+    const newExtensions = newWebGL.extensions || [];
+    const extensionSimilarity = calculateArraySimilarity(oldExtensions, newExtensions);
+    matches += extensionSimilarity * 0.5;
+    total += 0.5;
+    
+    return total > 0 ? (matches / total) * 100 : 0;
+}
+
+// 計算音訊相似度
+function calculateAudioSimilarity(oldAudio, newAudio) {
+    if (!oldAudio || !newAudio) return 0;
+    
+    if (oldAudio.fingerprint === newAudio.fingerprint) {
+        return 100;
+    }
+    
+    if (oldAudio.sampleRate === newAudio.sampleRate) {
+        return 50; // 部分匹配
+    }
+    
+    return 0;
+}
+
+// 計算字體相似度
+function calculateFontsSimilarity(oldFonts, newFonts) {
+    if (!oldFonts || !newFonts) return 0;
+    
+    const oldAvailable = oldFonts.available || [];
+    const newAvailable = newFonts.available || [];
+    
+    return calculateArraySimilarity(oldAvailable, newAvailable);
+}
+
+// 計算硬體相似度
+function calculateHardwareSimilarity(oldHardware, newHardware) {
+    if (!oldHardware || !newHardware) return 0;
+    
+    let matches = 0;
+    let total = 0;
+    
+    if (oldHardware.cores === newHardware.cores) matches++;
+    if (oldHardware.memory === newHardware.memory) matches++;
+    if (oldHardware.touchPoints === newHardware.touchPoints) matches++;
+    total += 3;
+    
+    return total > 0 ? (matches / total) * 100 : 0;
+}
+
+// 計算自定義指紋相似度
+function calculateCustomSimilarity(oldCustom, newCustom) {
+    if (!oldCustom || !newCustom) return 0;
+    
+    let matches = 0;
+    let total = 0;
+    
+    // 比較螢幕資訊
+    if (oldCustom.screen && newCustom.screen) {
+        if (oldCustom.screen.width === newCustom.screen.width) matches++;
+        if (oldCustom.screen.height === newCustom.screen.height) matches++;
+        if (oldCustom.screen.colorDepth === newCustom.screen.colorDepth) matches++;
+        total += 3;
+    }
+    
+    // 比較時區
+    if (oldCustom.timezone === newCustom.timezone) matches++;
+    total++;
+    
+    return total > 0 ? (matches / total) * 100 : 0;
+}
+
+// 計算陣列相似度
+function calculateArraySimilarity(oldArray, newArray) {
+    if (!Array.isArray(oldArray) || !Array.isArray(newArray)) return 0;
+    
+    const oldSet = new Set(oldArray);
+    const newSet = new Set(newArray);
+    
+    const intersection = new Set([...oldSet].filter(x => newSet.has(x)));
+    const union = new Set([...oldSet, ...newSet]);
+    
+    return union.size > 0 ? (intersection.size / union.size) * 100 : 0;
+}
+
+// 雜湊字串
+function hashString(str) {
+    let hash = 0;
+    if (str.length === 0) return hash.toString(16);
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // 轉換為 32 位整數
+    }
+    return hash.toString(16);
 }
 
 // 中間件：檢查是否已登入
@@ -362,19 +560,43 @@ app.get('/api/auth/me', (req, res) => {
     });
 });
 
-// API 路由：處理指紋資料
+// API 路由：處理多重指紋資料
 app.post('/api/fingerprint', (req, res) => {
-    const { visitorId, confidence, version, components, timestamp } = req.body;
+    const { 
+        visitorId, 
+        confidence, 
+        version, 
+        components, 
+        clientId,
+        custom,
+        canvas,
+        webgl,
+        audio,
+        fonts,
+        plugins,
+        hardware,
+        collectionTime,
+        timestamp 
+    } = req.body;
 
     if (!visitorId) {
         return res.status(400).json({ error: '缺少訪客 ID' });
     }
 
-    console.log('收到指紋資料:', {
+    console.log('收到多重指紋資料:', {
         visitorId,
         confidence: confidence?.score,
         version,
         componentsCount: Object.keys(components || {}).length,
+        clientId,
+        hasCustom: !!custom,
+        hasCanvas: !!canvas,
+        hasWebGL: !!webgl,
+        hasAudio: !!audio,
+        hasFonts: !!fonts,
+        hasPlugins: !!plugins,
+        hasHardware: !!hardware,
+        collectionTime,
         isLoggedIn: !!req.session.userId,
         userId: req.session.userId
     });
@@ -385,15 +607,15 @@ app.post('/api/fingerprint', (req, res) => {
     // **新邏輯：區分登入和未登入用戶**
     if (req.session.userId) {
         // **已登入用戶：將指紋關聯到該用戶帳號**
-        handleLoggedInUserFingerprint(req, res, visitorId, confidence, version, components);
+        handleLoggedInUserFingerprint(req, res, visitorId, confidence, version, components, clientId, custom, canvas, webgl, audio, fonts, plugins, hardware, collectionTime);
     } else {
         // **未登入用戶：比對現有指紋並顯示相似度**
-        handleGuestUserFingerprint(req, res, visitorId, confidence, version, components);
+        handleGuestUserFingerprint(req, res, visitorId, confidence, version, components, clientId, custom, canvas, webgl, audio, fonts, plugins, hardware, collectionTime);
     }
 });
 
 // 處理登入用戶的指紋
-function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version, components) {
+function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version, components, clientId, custom, canvas, webgl, audio, fonts, plugins, hardware, collectionTime) {
     const userId = req.session.userId;
     
     // 檢查該用戶是否已有指紋記錄
@@ -412,13 +634,22 @@ function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version,
                 const similarity = calculateSimilarity(oldComponents, components || {});
                 
                 db.run(
-                    'UPDATE fingerprints SET visitor_id = ?, confidence_score = ?, confidence_comment = ?, version = ?, components = ?, last_seen = CURRENT_TIMESTAMP WHERE linked_user_id = ?',
+                    'UPDATE fingerprints SET visitor_id = ?, confidence_score = ?, confidence_comment = ?, version = ?, components = ?, client_id = ?, custom_fingerprint = ?, canvas_fingerprint = ?, webgl_fingerprint = ?, audio_fingerprint = ?, fonts_fingerprint = ?, plugins_fingerprint = ?, hardware_fingerprint = ?, collection_time = ?, last_seen = CURRENT_TIMESTAMP WHERE linked_user_id = ?',
                     [
                         visitorId,
                         confidence?.score || 0,
                         confidence?.comment || '',
                         version || '',
                         JSON.stringify(components || {}),
+                        clientId || '',
+                        JSON.stringify(custom || {}),
+                        canvas || '',
+                        JSON.stringify(webgl || {}),
+                        JSON.stringify(audio || {}),
+                        JSON.stringify(fonts || {}),
+                        JSON.stringify(plugins || {}),
+                        JSON.stringify(hardware || {}),
+                        collectionTime || 0,
                         userId
                     ],
                     function(updateErr) {
@@ -445,13 +676,22 @@ function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version,
             } else {
                 // 新增指紋記錄
                 db.run(
-                    'INSERT INTO fingerprints (visitor_id, confidence_score, confidence_comment, version, components, linked_user_id) VALUES (?, ?, ?, ?, ?, ?)',
+                    'INSERT INTO fingerprints (visitor_id, confidence_score, confidence_comment, version, components, client_id, custom_fingerprint, canvas_fingerprint, webgl_fingerprint, audio_fingerprint, fonts_fingerprint, plugins_fingerprint, hardware_fingerprint, collection_time, linked_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [
                         visitorId,
                         confidence?.score || 0,
                         confidence?.comment || '',
                         version || '',
                         JSON.stringify(components || {}),
+                        clientId || '',
+                        JSON.stringify(custom || {}),
+                        canvas || '',
+                        JSON.stringify(webgl || {}),
+                        JSON.stringify(audio || {}),
+                        JSON.stringify(fonts || {}),
+                        JSON.stringify(plugins || {}),
+                        JSON.stringify(hardware || {}),
+                        collectionTime || 0,
                         userId
                     ],
                     function(insertErr) {
@@ -479,7 +719,7 @@ function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version,
 }
 
 // 處理訪客的指紋(未登入)
-function handleGuestUserFingerprint(req, res, visitorId, confidence, version, components) {
+function handleGuestUserFingerprint(req, res, visitorId, confidence, version, components, clientId, custom, canvas, webgl, audio, fonts, plugins, hardware, collectionTime) {
 
     // 比對現有所有指紋，找出相似度最高的前5個
     db.all(
@@ -490,14 +730,37 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
                 return res.status(500).json({ error: '資料庫查詢失敗' });
             }
 
-            // 計算與所有用戶的相似度並排序
+            // 計算與所有用戶的多重指紋相似度並排序
             const similarityResults = [];
             
             for (const user of allUsers) {
-                const userComponents = JSON.parse(user.components || '{}');
-                const similarity = calculateSimilarity(userComponents, components || {});
+                // 構建舊的指紋資料結構
+                const oldData = {
+                    components: JSON.parse(user.components || '{}'),
+                    canvas: user.canvas_fingerprint,
+                    webgl: JSON.parse(user.webgl_fingerprint || '{}'),
+                    audio: JSON.parse(user.audio_fingerprint || '{}'),
+                    fonts: JSON.parse(user.fonts_fingerprint || '{}'),
+                    plugins: JSON.parse(user.plugins_fingerprint || '{}'),
+                    hardware: JSON.parse(user.hardware_fingerprint || '{}'),
+                    custom: JSON.parse(user.custom_fingerprint || '{}')
+                };
                 
-                console.log(`與指紋 ID ${user.id} (用戶: ${user.username || '未登入'}) 相似度: ${similarity.toFixed(1)}%`);
+                // 構建新的指紋資料結構
+                const newData = {
+                    components: components || {},
+                    canvas: canvas,
+                    webgl: webgl || {},
+                    audio: audio || {},
+                    fonts: fonts || {},
+                    plugins: plugins || {},
+                    hardware: hardware || {},
+                    custom: custom || {}
+                };
+                
+                const similarity = calculateMultiFingerprintSimilarity(oldData, newData);
+                
+                console.log(`與指紋 ID ${user.id} (用戶: ${user.username || '未登入'}) 多重指紋相似度: ${similarity.toFixed(1)}%`);
                 
                 if (similarity > 0) { // 只記錄有相似度的結果
                     similarityResults.push({
@@ -514,7 +777,7 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
             const top5Matches = similarityResults.slice(0, 5);
 
             // **關鍵：返回前5個最相似的用戶**
-            if (top5Matches.length > 0 && top5Matches[0].similarity >= 50) { // 50% 以上顯示相似度
+            if (top5Matches.length > 0 && top5Matches[0].similarity >= 40) { // 50% 以上顯示相似度
                 console.log(`找到 ${top5Matches.length} 個相似用戶，最高相似度: ${top5Matches[0].similarity.toFixed(1)}%`);
                 
                 // 生成相似度列表訊息
