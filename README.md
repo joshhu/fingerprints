@@ -6,14 +6,14 @@
 
 - 使用 FingerprintJS V4 進行高精度瀏覽器指紋採集
 - 支援用戶註冊和登入系統
-- 智能指紋相似度比對演算法
+- 智慧指紋相似度比對演算法
 - 即時視窗大小監控
 - reCAPTCHA 驗證保護
 - 響應式設計
 
 ## 本地開發
 
-### 安裝依賴
+### 安裝套件
 ```bash
 npm install
 ```
@@ -34,7 +34,7 @@ npm start
 確保你的專案已經準備好部署：
 - 所有檔案都已提交到 Git
 - `package.json` 包含正確的啟動指令
-- 伺服器使用 `process.env.PORT` 作為端口
+- 伺服器使用 `process.env.PORT` 作為連接埠
 
 ### 2. 在 Render 上部署
 
@@ -52,12 +52,12 @@ npm start
 ### 3. 環境變數設定（可選）
 如果需要，可以在 Render 的環境變數中設定：
 - `NODE_ENV`: `production`
-- 其他自定義環境變數
+- 其他自訂環境變數
 
 ### 4. 部署
 點擊 "Create Web Service"，Render 會自動：
 - 從 GitHub 拉取程式碼
-- 安裝依賴
+- 安裝套件
 - 啟動應用程式
 - 提供公開的 URL
 
@@ -66,7 +66,7 @@ npm start
 ```
 fingerprints/
 ├── server.js              # Express 伺服器
-├── package.json           # 專案配置
+├── package.json           # 專案設定
 ├── public/                # 靜態檔案
 │   ├── index.html         # 主頁面
 │   ├── style.css          # 樣式
@@ -86,7 +86,7 @@ fingerprints/
 - `POST /api/auth/logout` - 用戶登出
 - `GET /api/auth/me` - 取得當前用戶資訊
 
-## 技術棧
+## 技術堆疊
 
 - **後端**: Node.js, Express.js, SQLite
 - **前端**: HTML5, CSS3, JavaScript (ES6+)
