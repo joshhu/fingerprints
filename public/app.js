@@ -32,10 +32,17 @@ class MultiFingerprintApp {
             
             this.isInitialized = true;
             console.log('多重指紋採集系統初始化成功');
-            this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
             
-            // 初始化顯示基本系統資訊
-            this.clearResults();
+            // 等待 DOM 完全載入後再更新 UI
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
+                    this.clearResults();
+                });
+            } else {
+                this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
+                this.clearResults();
+            }
             
         } catch (error) {
             console.error('多重指紋採集系統初始化失敗:', error);
@@ -898,8 +905,12 @@ class MultiFingerprintApp {
     // 更新狀態
     updateStatus(message, className = 'ready') {
         const statusElement = document.getElementById('userStatus');
-        statusElement.textContent = message;
-        statusElement.className = `user-status ${className}`;
+        if (statusElement) {
+            statusElement.textContent = message;
+            statusElement.className = `user-status ${className}`;
+        } else {
+            console.warn('找不到 userStatus 元素');
+        }
     }
 
     // 顯示錯誤
@@ -955,12 +966,16 @@ class MultiFingerprintApp {
     // 更新用戶顯示
     updateUserDisplay() {
         const userStatus = document.getElementById('userStatus');
-        if (this.currentUser) {
-            userStatus.textContent = `已登入: ${this.currentUser.username}`;
-            userStatus.className = 'user-status logged-in-user';
+        if (userStatus) {
+            if (this.currentUser) {
+                userStatus.textContent = `已登入: ${this.currentUser.username}`;
+                userStatus.className = 'user-status logged-in-user';
+            } else {
+                userStatus.textContent = '未登入';
+                userStatus.className = 'user-status ready';
+            }
         } else {
-            userStatus.textContent = '未登入';
-            userStatus.className = 'user-status ready';
+            console.warn('找不到 userStatus 元素');
         }
     }
 
