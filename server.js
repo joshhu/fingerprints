@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const axios = require('axios');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // reCAPTCHA 配置 (使用測試用的密鑰)
 const RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'; // Google 測試用密鑰
@@ -77,7 +77,7 @@ db.serialize(() => {
     // 資料庫初始化完成
 });
 
-console.log('伺服器運行在 http://0.0.0.0:' + PORT);
+console.log('伺服器運行在 http://localhost:' + PORT);
 console.log('FingerprintJS V4 指紋採集測試網站已啟動');
 
 // 計算指紋相似度函數
@@ -688,8 +688,8 @@ app.use((err, req, res, next) => {
 });
 
 // 啟動伺服器
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`伺服器運行在 http://0.0.0.0:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`伺服器運行在 http://localhost:${PORT}`);
     console.log('FingerprintJS V4 指紋採集測試網站已啟動');
 });
 
