@@ -86,14 +86,31 @@ class FingerprintApp {
         const registerBtn = document.getElementById('registerBtn');
         const showRegisterBtn = document.getElementById('showRegisterBtn');
         const showLoginBtn = document.getElementById('showLoginBtn');
+        const closeModalBtn = document.getElementById('closeModal');
+        const authModal = document.getElementById('authModal');
 
         collectBtn.addEventListener('click', () => this.collectFingerprint());
         clearBtn.addEventListener('click', () => this.clearResults());
-        toggleAuthBtn.addEventListener('click', () => this.toggleAuthSection());
+        toggleAuthBtn.addEventListener('click', () => this.showAuthModal());
         loginBtn.addEventListener('click', () => this.login());
         registerBtn.addEventListener('click', () => this.register());
         showRegisterBtn.addEventListener('click', () => this.showRegisterForm());
         showLoginBtn.addEventListener('click', () => this.showLoginForm());
+        closeModalBtn.addEventListener('click', () => this.closeAuthModal());
+        
+        // 點擊背景關閉彈出視窗
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                this.closeAuthModal();
+            }
+        });
+        
+        // ESC 鍵關閉彈出視窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && authModal.classList.contains('show')) {
+                this.closeAuthModal();
+            }
+        });
     }
 
     // 設定即時更新
@@ -488,20 +505,55 @@ class FingerprintApp {
         }
     }
 
-    // 切換認證區域顯示
-    toggleAuthSection() {
-        const authSection = document.getElementById('authSection');
-        if (authSection.style.display === 'none') {
-            authSection.style.display = 'block';
-        } else {
-            authSection.style.display = 'none';
+    // 顯示認證彈出視窗
+    showAuthModal() {
+        const authModal = document.getElementById('authModal');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        // 預設顯示登入表單
+        this.showLoginForm();
+        modalTitle.textContent = '用戶登入';
+        
+        // 顯示彈出視窗
+        authModal.classList.add('show');
+        document.body.style.overflow = 'hidden'; // 防止背景滾動
+    }
+
+    // 關閉認證彈出視窗
+    closeAuthModal() {
+        const authModal = document.getElementById('authModal');
+        
+        // 隱藏彈出視窗
+        authModal.classList.remove('show');
+        document.body.style.overflow = ''; // 恢復背景滾動
+        
+        // 清空表單
+        this.clearAuthForms();
+    }
+
+    // 清空認證表單
+    clearAuthForms() {
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('registerUsername').value = '';
+        document.getElementById('registerPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        
+        // 重置 reCAPTCHA
+        if (this.loginRecaptchaId !== null) {
+            grecaptcha.reset(this.loginRecaptchaId);
+        }
+        if (this.registerRecaptchaId !== null) {
+            grecaptcha.reset(this.registerRecaptchaId);
         }
     }
 
     // 顯示登入表單
     showLoginForm() {
+        const modalTitle = document.getElementById('modalTitle');
         document.getElementById('loginForm').style.display = 'block';
         document.getElementById('registerForm').style.display = 'none';
+        modalTitle.textContent = '用戶登入';
         // 重置 reCAPTCHA
         if (this.loginRecaptchaId !== null) {
             grecaptcha.reset(this.loginRecaptchaId);
@@ -510,8 +562,10 @@ class FingerprintApp {
 
     // 顯示註冊表單
     showRegisterForm() {
+        const modalTitle = document.getElementById('modalTitle');
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('registerForm').style.display = 'block';
+        modalTitle.textContent = '用戶註冊';
         // 重置 reCAPTCHA
         if (this.registerRecaptchaId !== null) {
             grecaptcha.reset(this.registerRecaptchaId);
@@ -548,15 +602,8 @@ class FingerprintApp {
             if (response.ok) {
                 this.currentUser = data.user;
                 this.updateUserDisplay();
-                this.toggleAuthSection();
+                this.closeAuthModal();
                 this.updateStatus(`歡迎回來，${data.user.username}！`, 'logged-in-user');
-                
-                // 清空表單和 reCAPTCHA
-                document.getElementById('loginUsername').value = '';
-                document.getElementById('loginPassword').value = '';
-                if (this.loginRecaptchaId !== null) {
-                    grecaptcha.reset(this.loginRecaptchaId);
-                }
             } else {
                 alert(data.error || '登入失敗');
             }

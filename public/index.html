@@ -105,53 +105,6 @@
             </div>
         </header>
 
-        <!-- 用戶認證表單 -->
-        <div class="auth-section" id="authSection" style="display: none;">
-            <!-- 登入表單 -->
-            <div class="auth-form" id="loginForm">
-                <h3>用戶登入</h3>
-                <div class="form-group">
-                    <label for="loginUsername">用戶名：</label>
-                    <input type="text" id="loginUsername" placeholder="請輸入用戶名">
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">密碼：</label>
-                    <input type="password" id="loginPassword" placeholder="請輸入密碼">
-                </div>
-                <div class="form-group recaptcha-container">
-                    <div id="loginRecaptcha"></div>
-                </div>
-                <div class="form-buttons">
-                    <button id="loginBtn" class="btn btn-primary">登入</button>
-                    <button id="showRegisterBtn" class="btn btn-secondary">註冊新帳號</button>
-                </div>
-            </div>
-
-            <!-- 註冊表單 -->
-            <div class="auth-form" id="registerForm" style="display: none;">
-                <h3>用戶註冊</h3>
-                <div class="form-group">
-                    <label for="registerUsername">用戶名：</label>
-                    <input type="text" id="registerUsername" placeholder="請輸入用戶名">
-                </div>
-                <div class="form-group">
-                    <label for="registerPassword">密碼：</label>
-                    <input type="password" id="registerPassword" placeholder="請輸入密碼">
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">確認密碼：</label>
-                    <input type="password" id="confirmPassword" placeholder="請再次輸入密碼">
-                </div>
-                <div class="form-group recaptcha-container">
-                    <div id="registerRecaptcha"></div>
-                </div>
-                <div class="form-buttons">
-                    <button id="registerBtn" class="btn btn-primary">註冊</button>
-                    <button id="showLoginBtn" class="btn btn-secondary">已有帳號，登入</button>
-                </div>
-            </div>
-        </div>
-
         <div class="user-status" id="userStatus">
             <span id="userStatusText">準備採集指紋...</span>
         </div>
@@ -256,6 +209,58 @@
             <div class="debug-section">
                 <h3>調試資訊</h3>
                 <pre id="debugOutput">準備採集...</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 認證彈出視窗 -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">用戶登入</h3>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            
+            <!-- 登入表單 -->
+            <div class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">用戶名：</label>
+                    <input type="text" id="loginUsername" placeholder="請輸入用戶名">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密碼：</label>
+                    <input type="password" id="loginPassword" placeholder="請輸入密碼">
+                </div>
+                <div class="form-group recaptcha-container">
+                    <div id="loginRecaptcha"></div>
+                </div>
+                <div class="form-buttons">
+                    <button id="loginBtn" class="btn btn-primary">登入</button>
+                    <button id="showRegisterBtn" class="btn btn-secondary">註冊新帳號</button>
+                </div>
+            </div>
+
+            <!-- 註冊表單 -->
+            <div class="auth-form" id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label for="registerUsername">用戶名：</label>
+                    <input type="text" id="registerUsername" placeholder="請輸入用戶名">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密碼：</label>
+                    <input type="password" id="registerPassword" placeholder="請輸入密碼">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">確認密碼：</label>
+                    <input type="password" id="confirmPassword" placeholder="請再次輸入密碼">
+                </div>
+                <div class="form-group recaptcha-container">
+                    <div id="registerRecaptcha"></div>
+                </div>
+                <div class="form-buttons">
+                    <button id="registerBtn" class="btn btn-primary">註冊</button>
+                    <button id="showLoginBtn" class="btn btn-secondary">已有帳號，登入</button>
+                </div>
             </div>
         </div>
     </div>
