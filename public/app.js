@@ -182,7 +182,7 @@ class MultiFingerprintApp {
 
             // 2. 採集自定義指紋
             console.log('採集自定義指紋...');
-            const customFingerprint = this.collectCustomFingerprint();
+            const customFingerprint = await this.collectCustomFingerprint();
             fingerprintData.custom = customFingerprint;
 
             // 3. 採集 Canvas 指紋
@@ -207,7 +207,7 @@ class MultiFingerprintApp {
 
             // 8. 採集硬體指紋
             console.log('採集硬體指紋...');
-            fingerprintData.hardware = this.collectHardwareFingerprint();
+            fingerprintData.hardware = await this.collectHardwareFingerprint();
 
             // 計算採集時間
             fingerprintData.collectionTime = Date.now() - startTime;
@@ -229,7 +229,7 @@ class MultiFingerprintApp {
     }
 
     // 採集自定義指紋
-    collectCustomFingerprint() {
+    async collectCustomFingerprint() {
         const custom = {};
         
         try {
@@ -273,14 +273,17 @@ class MultiFingerprintApp {
             
             // 電池資訊（如果可用）
             if (navigator.getBattery) {
-                navigator.getBattery().then(battery => {
+                try {
+                    const battery = await navigator.getBattery();
                     custom.battery = {
                         level: battery.level,
                         charging: battery.charging
                     };
-                }).catch(() => {
+                } catch (batteryError) {
                     custom.battery = 'not_supported';
-                });
+                }
+            } else {
+                custom.battery = 'not_supported';
             }
             
             // 連接資訊
@@ -359,6 +362,17 @@ class MultiFingerprintApp {
             audio.sampleRate = audioContext.sampleRate;
             audio.state = audioContext.state;
             
+            // 如果 AudioContext 被暫停，嘗試恢復
+            if (audioContext.state === 'suspended') {
+                try {
+                    await audioContext.resume();
+                } catch (resumeError) {
+                    console.warn('無法恢復 AudioContext:', resumeError);
+                    audio.fingerprint = 'context_suspended';
+                    return audio;
+                }
+            }
+            
             // 創建振盪器
             const oscillator = audioContext.createOscillator();
             const analyser = audioContext.createAnalyser();
@@ -376,6 +390,9 @@ class MultiFingerprintApp {
             oscillator.start();
             oscillator.stop(audioContext.currentTime + 0.1);
             
+            // 等待一小段時間讓音訊處理完成
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
             // 取得頻率資料
             const frequencyData = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(frequencyData);
@@ -390,11 +407,16 @@ class MultiFingerprintApp {
             audio.fingerprint = hash.toString(16);
             
             // 關閉音訊上下文
-            await audioContext.close();
+            try {
+                await audioContext.close();
+            } catch (closeError) {
+                console.warn('關閉 AudioContext 失敗:', closeError);
+            }
             
         } catch (error) {
             console.error('音訊指紋採集錯誤:', error);
             audio.error = error.message;
+            audio.fingerprint = 'error';
         }
         
         return audio;
@@ -488,7 +510,7 @@ class MultiFingerprintApp {
     }
 
     // 採集硬體指紋
-    collectHardwareFingerprint() {
+    async collectHardwareFingerprint() {
         const hardware = {};
         
         try {
@@ -503,16 +525,19 @@ class MultiFingerprintApp {
             
             // 電池資訊
             if (navigator.getBattery) {
-                navigator.getBattery().then(battery => {
+                try {
+                    const battery = await navigator.getBattery();
                     hardware.battery = {
                         level: battery.level,
                         charging: battery.charging,
                         chargingTime: battery.chargingTime,
                         dischargingTime: battery.dischargingTime
                     };
-                }).catch(() => {
+                } catch (batteryError) {
                     hardware.battery = 'not_supported';
-                });
+                }
+            } else {
+                hardware.battery = 'not_supported';
             }
             
             // 網路連接
