@@ -527,7 +527,7 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
                     isNewUser: true, // 訪客是新的，但找到相似的
                     similarity: top5Matches[0].similarity,
                     topMatches: top5Matches,
-                    message: `找到 ${top5Matches.length} 個相似用戶：${similarityList}`,
+                    message: `找到 ${top5Matches.length} 個相似用戶：\n\n${similarityList}`,
                     isGuest: true
                 });
             } else {
