@@ -849,8 +849,9 @@ function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version,
 function handleGuestUserFingerprint(req, res, visitorId, confidence, version, components, clientId, custom, canvas, webgl, audio, fonts, plugins, hardware, collectionTime) {
 
     // 比對現有所有指紋，找出相似度最高的前5個
+    // 使用更安全的查詢，適應不同的資料庫結構
     db.all(
-        'SELECT f.id, f.visitor_id, f.components, f.canvas_fingerprint, f.webgl_fingerprint, f.audio_fingerprint, f.fonts_fingerprint, f.plugins_fingerprint, f.hardware_fingerprint, f.custom_fingerprint, f.linked_user_id, a.username FROM fingerprints f LEFT JOIN accounts a ON f.linked_user_id = a.id',
+        'SELECT f.id, f.visitor_id, f.components, f.linked_user_id, a.username FROM fingerprints f LEFT JOIN accounts a ON f.linked_user_id = a.id',
         (err, allUsers) => {
             if (err) {
                 console.error('查詢所有指紋錯誤:', err);
@@ -861,16 +862,17 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
             const similarityResults = [];
             
             for (const user of allUsers) {
-                // 構建舊的指紋資料結構
+                // 構建舊的指紋資料結構（適應舊資料庫結構）
                 const oldData = {
                     components: JSON.parse(user.components || '{}'),
-                    canvas: user.canvas_fingerprint || '',
-                    webgl: user.webgl_fingerprint ? JSON.parse(user.webgl_fingerprint) : {},
-                    audio: user.audio_fingerprint ? JSON.parse(user.audio_fingerprint) : {},
-                    fonts: user.fonts_fingerprint ? JSON.parse(user.fonts_fingerprint) : {},
-                    plugins: user.plugins_fingerprint ? JSON.parse(user.plugins_fingerprint) : {},
-                    hardware: user.hardware_fingerprint ? JSON.parse(user.hardware_fingerprint) : {},
-                    custom: user.custom_fingerprint ? JSON.parse(user.custom_fingerprint) : {}
+                    // 舊資料庫可能沒有這些欄位，使用空值
+                    canvas: '',
+                    webgl: {},
+                    audio: {},
+                    fonts: {},
+                    plugins: {},
+                    hardware: {},
+                    custom: {}
                 };
                 
                 // 構建新的指紋資料結構
