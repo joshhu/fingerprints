@@ -168,7 +168,19 @@ function calculateMultiFingerprintSimilarity(oldData, newData) {
         return 0;
     }
     
-    return Math.round((totalScore / maxScore) * 100 * 10) / 10;
+    // 計算相似度並確保在 0-100 範圍內
+    const similarity = (totalScore / maxScore) * 100;
+    const finalSimilarity = Math.min(100, Math.max(0, Math.round(similarity * 10) / 10));
+    
+    // 調試信息
+    console.log('相似度計算調試:', {
+        totalScore,
+        maxScore,
+        rawSimilarity: similarity,
+        finalSimilarity
+    });
+    
+    return finalSimilarity;
 }
 
 // 計算 FingerprintJS V4 相似度
