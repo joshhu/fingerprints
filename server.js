@@ -112,75 +112,83 @@ console.log('FingerprintJS V4 指紋採集測試網站已啟動');
 
 // 計算多重指紋相似度函數
 function calculateMultiFingerprintSimilarity(oldData, newData) {
-    let totalScore = 0;
-    let maxScore = 0;
+    const similarities = [];
+    const weights = [];
     
     // 1. FingerprintJS V4 相似度 (權重 30%)
     if (oldData.components && newData.components) {
         const fpSimilarity = calculateFingerprintJSSimilarity(oldData.components, newData.components);
-        totalScore += fpSimilarity * 0.3;
-        maxScore += 100 * 0.3;
+        similarities.push(fpSimilarity);
+        weights.push(0.3);
     }
     
     // 2. Canvas 指紋相似度 (權重 20%)
     if (oldData.canvas && newData.canvas) {
         const canvasSimilarity = calculateCanvasSimilarity(oldData.canvas, newData.canvas);
-        totalScore += canvasSimilarity * 0.2;
-        maxScore += 100 * 0.2;
+        similarities.push(canvasSimilarity);
+        weights.push(0.2);
     }
     
     // 3. WebGL 指紋相似度 (權重 15%)
     if (oldData.webgl && newData.webgl) {
         const webglSimilarity = calculateWebGLSimilarity(oldData.webgl, newData.webgl);
-        totalScore += webglSimilarity * 0.15;
-        maxScore += 100 * 0.15;
+        similarities.push(webglSimilarity);
+        weights.push(0.15);
     }
     
     // 4. 音訊指紋相似度 (權重 10%)
     if (oldData.audio && newData.audio) {
         const audioSimilarity = calculateAudioSimilarity(oldData.audio, newData.audio);
-        totalScore += audioSimilarity * 0.1;
-        maxScore += 100 * 0.1;
+        similarities.push(audioSimilarity);
+        weights.push(0.1);
     }
     
     // 5. 字體指紋相似度 (權重 10%)
     if (oldData.fonts && newData.fonts) {
         const fontsSimilarity = calculateFontsSimilarity(oldData.fonts, newData.fonts);
-        totalScore += fontsSimilarity * 0.1;
-        maxScore += 100 * 0.1;
+        similarities.push(fontsSimilarity);
+        weights.push(0.1);
     }
     
     // 6. 硬體指紋相似度 (權重 10%)
     if (oldData.hardware && newData.hardware) {
         const hardwareSimilarity = calculateHardwareSimilarity(oldData.hardware, newData.hardware);
-        totalScore += hardwareSimilarity * 0.1;
-        maxScore += 100 * 0.1;
+        similarities.push(hardwareSimilarity);
+        weights.push(0.1);
     }
     
     // 7. 自定義指紋相似度 (權重 5%)
     if (oldData.custom && newData.custom) {
         const customSimilarity = calculateCustomSimilarity(oldData.custom, newData.custom);
-        totalScore += customSimilarity * 0.05;
-        maxScore += 100 * 0.05;
+        similarities.push(customSimilarity);
+        weights.push(0.05);
     }
     
-    if (maxScore === 0) {
+    if (similarities.length === 0) {
         return 0;
     }
     
-    // 計算相似度並確保在 0-100 範圍內
-    const similarity = (totalScore / maxScore) * 100;
-    const finalSimilarity = Math.min(100, Math.max(0, Math.round(similarity * 10) / 10));
+    // 計算加權平均相似度
+    let weightedSum = 0;
+    let totalWeight = 0;
+    
+    for (let i = 0; i < similarities.length; i++) {
+        weightedSum += similarities[i] * weights[i];
+        totalWeight += weights[i];
+    }
+    
+    const finalSimilarity = Math.round((weightedSum / totalWeight) * 10) / 10;
     
     // 調試信息
     console.log('相似度計算調試:', {
-        totalScore,
-        maxScore,
-        rawSimilarity: similarity,
+        similarities,
+        weights,
+        weightedSum,
+        totalWeight,
         finalSimilarity
     });
     
-    return finalSimilarity;
+    return Math.min(100, Math.max(0, finalSimilarity));
 }
 
 // 計算 FingerprintJS V4 相似度
