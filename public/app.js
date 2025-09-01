@@ -231,7 +231,7 @@ class MultiFingerprintApp {
             // 發送到伺服器
             await this.sendMultiFingerprintToServer(fingerprintData);
             
-            this.updateStatus('多重指紋採集完成！', 'success');
+            // 注意：狀態更新由 sendMultiFingerprintToServer 處理，這裡不需要重複設置
             
         } catch (error) {
             console.error('多重指紋採集失敗:', error);
@@ -974,8 +974,9 @@ class MultiFingerprintApp {
             console.log('伺服器回應:', result);
             
             if (response.ok) {
+                console.log('處理伺服器回應，isLoggedIn:', result.isLoggedIn, 'isGuest:', result.isGuest);
                 if (result.isLoggedIn) {
-                    console.log('已登入用戶');
+                    console.log('已登入用戶，訊息:', result.message);
                     this.updateStatus(result.message, 'logged-in-user');
                 } else if (result.isGuest && result.topMatches && result.topMatches.length > 0) {
                     console.log('找到相似用戶:', result.topMatches);
