@@ -892,9 +892,16 @@ class MultiFingerprintApp {
 
     // 顯示指紋相似度結果
     displaySimilarityResults(topMatches) {
+        console.log('displaySimilarityResults 被調用，topMatches:', topMatches);
         const resultContainer = document.getElementById('componentsList');
         
-        if (!resultContainer || !topMatches || topMatches.length === 0) {
+        if (!resultContainer) {
+            console.error('找不到 componentsList 元素');
+            return;
+        }
+        
+        if (!topMatches || topMatches.length === 0) {
+            console.log('沒有相似度資料');
             return;
         }
         
@@ -972,6 +979,7 @@ class MultiFingerprintApp {
                     this.updateStatus(result.message, 'logged-in-user');
                 } else if (result.isGuest && result.topMatches && result.topMatches.length > 0) {
                     console.log('找到相似用戶:', result.topMatches);
+                    console.log('相似度訊息:', result.message);
                     this.updateStatus(result.message, 'smart-correlation');
                     this.displaySimilarityResults(result.topMatches);
                 } else if (result.isGuest) {
@@ -1169,7 +1177,12 @@ class MultiFingerprintApp {
     updateStatus(message, className = 'ready') {
         const statusElement = document.getElementById('userStatus');
         if (statusElement) {
-            statusElement.textContent = message;
+            // 對於 smart-correlation 狀態，保持 HTML 格式
+            if (className === 'smart-correlation') {
+                statusElement.innerHTML = message;
+            } else {
+                statusElement.textContent = message;
+            }
             statusElement.className = `user-status ${className}`;
         } else {
             console.warn('找不到 userStatus 元素');

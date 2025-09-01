@@ -393,9 +393,17 @@ app.get('/api/captcha', (req, res) => {
     // 將答案存儲在 session 中
     req.session.captchaAnswer = captcha.answer;
     
-    res.json({
-        question: captcha.question,
-        timestamp: Date.now()
+    // 確保 session 被保存
+    req.session.save((err) => {
+        if (err) {
+            console.error('Session 保存錯誤:', err);
+            return res.status(500).json({ error: '無法生成驗證碼' });
+        }
+        
+        res.json({
+            question: captcha.question,
+            timestamp: Date.now()
+        });
     });
 });
 
