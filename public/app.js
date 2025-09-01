@@ -222,6 +222,12 @@ class MultiFingerprintApp {
             // 更新系統資訊顯示
             this.updateSystemInfoDisplay(fingerprintData);
             
+            // 更新 FingerprintJS V4 結果顯示
+            this.updateFingerprintJSDisplay(fingerprintData);
+            
+            // 更新調試資訊
+            this.updateDebugInfo(fingerprintData);
+            
             // 顯示結果
             this.displayMultiFingerprintResults(fingerprintData);
             
@@ -671,8 +677,80 @@ class MultiFingerprintApp {
                     }
                 }
             });
+            
+            // 重置 FingerprintJS V4 結果顯示
+            const fingerprintElements = document.querySelectorAll('.fingerprintjs-section .highlight');
+            fingerprintElements.forEach(element => {
+                element.textContent = '尚未採集';
+            });
+            
+            // 重置調試資訊
+            const debugOutput = document.getElementById('debugOutput');
+            if (debugOutput) {
+                debugOutput.textContent = '準備採集...';
+            }
+            
         } catch (error) {
             console.error('重置系統資訊顯示失敗:', error);
+        }
+    }
+
+    // 更新 FingerprintJS V4 結果顯示
+    updateFingerprintJSDisplay(data) {
+        try {
+            // 更新訪客 ID
+            const visitorIdElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(1) .highlight');
+            if (visitorIdElement && data.visitorId) {
+                visitorIdElement.textContent = data.visitorId;
+            }
+            
+            // 更新信心度
+            const confidenceElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(2) .highlight');
+            if (confidenceElement && data.confidence) {
+                confidenceElement.textContent = data.confidence;
+            }
+            
+            // 更新版本
+            const versionElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(3) .highlight');
+            if (versionElement && data.version) {
+                versionElement.textContent = data.version;
+            }
+            
+            // 更新採集時間
+            const collectionTimeElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(4) .highlight');
+            if (collectionTimeElement && data.collectionTime) {
+                collectionTimeElement.textContent = `${data.collectionTime}ms`;
+            }
+            
+        } catch (error) {
+            console.error('更新 FingerprintJS V4 顯示失敗:', error);
+        }
+    }
+
+    // 更新調試資訊
+    updateDebugInfo(data) {
+        try {
+            const debugOutput = document.getElementById('debugOutput');
+            if (debugOutput) {
+                const debugInfo = {
+                    timestamp: new Date().toISOString(),
+                    visitorId: data.visitorId,
+                    confidence: data.confidence,
+                    collectionTime: data.collectionTime,
+                    components: data.components ? Object.keys(data.components).length : 0,
+                    custom: data.custom ? '已採集' : '未採集',
+                    canvas: data.canvas ? '已採集' : '未採集',
+                    webgl: data.webgl ? '已採集' : '未採集',
+                    audio: data.audio ? '已採集' : '未採集',
+                    fonts: data.fonts ? `已採集 (${data.fonts.count} 個字體)` : '未採集',
+                    plugins: data.plugins ? `已採集 (${data.plugins.count} 個插件)` : '未採集',
+                    hardware: data.hardware ? '已採集' : '未採集'
+                };
+                
+                debugOutput.textContent = JSON.stringify(debugInfo, null, 2);
+            }
+        } catch (error) {
+            console.error('更新調試資訊失敗:', error);
         }
     }
 
