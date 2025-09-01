@@ -1177,17 +1177,19 @@ class MultiFingerprintApp {
     async login() {
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        const recaptchaResponse = grecaptcha.getResponse(this.loginRecaptchaId);
+        // 暫時移除 reCAPTCHA 驗證
+        // const recaptchaResponse = grecaptcha.getResponse(this.loginRecaptchaId);
 
         if (!username || !password) {
             alert('請輸入用戶名和密碼');
             return;
         }
 
-        if (!recaptchaResponse) {
-            alert('請完成 reCAPTCHA 驗證');
-            return;
-        }
+        // 暫時移除 reCAPTCHA 驗證
+        // if (!recaptchaResponse) {
+        //     alert('請完成 reCAPTCHA 驗證');
+        //     return;
+        // }
 
         try {
             const response = await fetch('/api/auth/login', {
@@ -1198,7 +1200,7 @@ class MultiFingerprintApp {
                 body: JSON.stringify({
                     username,
                     password,
-                    recaptchaResponse
+                    recaptchaResponse: 'disabled' // 暫時禁用 reCAPTCHA
                 })
             });
 
@@ -1222,17 +1224,19 @@ class MultiFingerprintApp {
     async register() {
         const username = document.getElementById('registerUsername').value;
         const password = document.getElementById('registerPassword').value;
-        const recaptchaResponse = grecaptcha.getResponse(this.registerRecaptchaId);
+        // 暫時移除 reCAPTCHA 驗證
+        // const recaptchaResponse = grecaptcha.getResponse(this.registerRecaptchaId);
 
         if (!username || !password) {
             alert('請輸入用戶名和密碼');
             return;
         }
 
-        if (!recaptchaResponse) {
-            alert('請完成 reCAPTCHA 驗證');
-            return;
-        }
+        // 暫時移除 reCAPTCHA 驗證
+        // if (!recaptchaResponse) {
+        //     alert('請完成 reCAPTCHA 驗證');
+        //     return;
+        // }
 
         try {
             const response = await fetch('/api/auth/register', {
@@ -1243,7 +1247,7 @@ class MultiFingerprintApp {
                 body: JSON.stringify({
                     username,
                     password,
-                    recaptchaResponse
+                    recaptchaResponse: 'disabled' // 暫時禁用 reCAPTCHA
                 })
             });
 

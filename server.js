@@ -405,14 +405,15 @@ app.post('/api/auth/register', async (req, res) => {
         return res.status(400).json({ error: '請填寫所有欄位' });
     }
     
-    // 驗證 reCAPTCHA
-    if (!recaptcha) {
-        return res.status(400).json({ error: '請完成 reCAPTCHA 驗證' });
-    }
-    
-    const recaptchaValid = await verifyRecaptcha(recaptcha);
-    if (!recaptchaValid) {
-        return res.status(400).json({ error: 'reCAPTCHA 驗證失敗，請重試' });
+    // 驗證 reCAPTCHA (暫時禁用)
+    if (!recaptcha || recaptcha === 'disabled') {
+        console.log('reCAPTCHA 已禁用，跳過驗證');
+        // 暫時跳過 reCAPTCHA 驗證
+    } else {
+        const recaptchaValid = await verifyRecaptcha(recaptcha);
+        if (!recaptchaValid) {
+            return res.status(400).json({ error: 'reCAPTCHA 驗證失敗，請重試' });
+        }
     }
     
     if (username.length < 3) {
@@ -472,14 +473,15 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(400).json({ error: '請輸入使用者名稱和密碼' });
     }
     
-    // 驗證 reCAPTCHA
-    if (!recaptcha) {
-        return res.status(400).json({ error: '請完成 reCAPTCHA 驗證' });
-    }
-    
-    const recaptchaValid = await verifyRecaptcha(recaptcha);
-    if (!recaptchaValid) {
-        return res.status(400).json({ error: 'reCAPTCHA 驗證失敗，請重試' });
+    // 驗證 reCAPTCHA (暫時禁用)
+    if (!recaptcha || recaptcha === 'disabled') {
+        console.log('reCAPTCHA 已禁用，跳過驗證');
+        // 暫時跳過 reCAPTCHA 驗證
+    } else {
+        const recaptchaValid = await verifyRecaptcha(recaptcha);
+        if (!recaptchaValid) {
+            return res.status(400).json({ error: 'reCAPTCHA 驗證失敗，請重試' });
+        }
     }
     
     // 查找用戶
