@@ -109,6 +109,7 @@ db.serialize(() => {
 
 console.log('伺服器運行在 http://localhost:' + PORT);
 console.log('FingerprintJS V4 指紋採集測試網站已啟動');
+console.log('資料庫相容性已修正 - 版本 2025.01.01');
 
 // 計算多重指紋相似度函數
 function calculateMultiFingerprintSimilarity(oldData, newData) {
