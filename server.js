@@ -51,12 +51,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'fingerprint-session-secret-key-2025',
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // 在 Render 環境中啟用 resave
+    saveUninitialized: true, // 在 Render 環境中啟用 saveUninitialized
     cookie: { 
-        secure: process.env.NODE_ENV === 'production', // 生產環境使用 HTTPS
+        secure: false, // Render 環境中暫時禁用 secure
         httpOnly: true, // 防止 XSS 攻擊
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 天
+        maxAge: 24 * 60 * 60 * 1000, // 1 天，減少 session 存儲時間
         sameSite: 'lax' // CSRF 保護
     },
     name: 'fingerprint.sid' // 自定義 session 名稱
@@ -413,12 +413,21 @@ app.get('/api/captcha', (req, res) => {
     // 將答案存儲在 session 中
     req.session.captchaAnswer = captcha.answer;
     
+    console.log('生成 CAPTCHA:', {
+        question: captcha.question,
+        answer: captcha.answer,
+        sessionId: req.sessionID,
+        hasCaptchaAnswer: !!req.session.captchaAnswer
+    });
+    
     // 確保 session 被保存
     req.session.save((err) => {
         if (err) {
             console.error('Session 保存錯誤:', err);
             return res.status(500).json({ error: '無法生成驗證碼' });
         }
+        
+        console.log('CAPTCHA session 保存成功');
         
         res.json({
             question: captcha.question,
@@ -472,12 +481,21 @@ app.post('/api/auth/register', async (req, res) => {
         return res.status(400).json({ error: '請完成驗證碼' });
     }
     
+    console.log('註冊驗證 CAPTCHA:', {
+        userInput: captcha,
+        sessionCaptchaAnswer: req.session.captchaAnswer,
+        sessionId: req.sessionID,
+        hasSession: !!req.session
+    });
+    
     if (!req.session.captchaAnswer) {
+        console.log('註冊 CAPTCHA 驗證失敗：session 中沒有 captchaAnswer');
         return res.status(400).json({ error: '驗證碼已過期，請重新載入' });
     }
     
     const captchaValid = verifyMathCaptcha(req.session.captchaAnswer, captcha);
     if (!captchaValid) {
+        console.log('註冊 CAPTCHA 驗證失敗：答案不匹配');
         return res.status(400).json({ error: '驗證碼錯誤，請重試' });
     }
     
@@ -546,12 +564,21 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(400).json({ error: '請完成驗證碼' });
     }
     
+    console.log('登入驗證 CAPTCHA:', {
+        userInput: captcha,
+        sessionCaptchaAnswer: req.session.captchaAnswer,
+        sessionId: req.sessionID,
+        hasSession: !!req.session
+    });
+    
     if (!req.session.captchaAnswer) {
+        console.log('登入 CAPTCHA 驗證失敗：session 中沒有 captchaAnswer');
         return res.status(400).json({ error: '驗證碼已過期，請重新載入' });
     }
     
     const captchaValid = verifyMathCaptcha(req.session.captchaAnswer, captcha);
     if (!captchaValid) {
+        console.log('登入 CAPTCHA 驗證失敗：答案不匹配');
         return res.status(400).json({ error: '驗證碼錯誤，請重試' });
     }
     
