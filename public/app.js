@@ -931,14 +931,21 @@ class MultiFingerprintApp {
             });
 
             const result = await response.json();
+            console.log('伺服器回應:', result);
             
             if (response.ok) {
                 if (result.isLoggedIn) {
+                    console.log('已登入用戶');
                     this.updateStatus(result.message, 'logged-in-user');
-                } else if (result.isGuest && result.topMatches) {
+                } else if (result.isGuest && result.topMatches && result.topMatches.length > 0) {
+                    console.log('找到相似用戶:', result.topMatches);
                     this.updateStatus(result.message, 'smart-correlation');
                 } else if (result.isGuest) {
+                    console.log('新訪客');
                     this.updateStatus(result.message, 'new-user');
+                } else {
+                    console.log('未知狀態:', result);
+                    this.updateStatus(result.message || '處理完成', 'ready');
                 }
             } else {
                 this.showError(result.error || '發送失敗');
