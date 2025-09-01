@@ -116,53 +116,60 @@ function calculateMultiFingerprintSimilarity(oldData, newData) {
     const similarities = [];
     const weights = [];
     
-    // 1. FingerprintJS V4 相似度 (權重 30%)
+    // 1. FingerprintJS V4 相似度 (權重 40% - 提高權重)
     if (oldData.components && newData.components) {
         const fpSimilarity = calculateFingerprintJSSimilarity(oldData.components, newData.components);
         similarities.push(fpSimilarity);
-        weights.push(0.3);
+        weights.push(0.4);
+        console.log('FingerprintJS 相似度:', fpSimilarity);
     }
     
     // 2. Canvas 指紋相似度 (權重 20%)
-    if (oldData.canvas && newData.canvas) {
+    if (oldData.canvas && newData.canvas && oldData.canvas !== '' && newData.canvas !== '') {
         const canvasSimilarity = calculateCanvasSimilarity(oldData.canvas, newData.canvas);
         similarities.push(canvasSimilarity);
         weights.push(0.2);
+        console.log('Canvas 相似度:', canvasSimilarity);
     }
     
     // 3. WebGL 指紋相似度 (權重 15%)
-    if (oldData.webgl && newData.webgl) {
+    if (oldData.webgl && newData.webgl && Object.keys(oldData.webgl).length > 0 && Object.keys(newData.webgl).length > 0) {
         const webglSimilarity = calculateWebGLSimilarity(oldData.webgl, newData.webgl);
         similarities.push(webglSimilarity);
         weights.push(0.15);
+        console.log('WebGL 相似度:', webglSimilarity);
     }
     
     // 4. 音訊指紋相似度 (權重 10%)
-    if (oldData.audio && newData.audio) {
+    if (oldData.audio && newData.audio && Object.keys(oldData.audio).length > 0 && Object.keys(newData.audio).length > 0) {
         const audioSimilarity = calculateAudioSimilarity(oldData.audio, newData.audio);
         similarities.push(audioSimilarity);
         weights.push(0.1);
+        console.log('Audio 相似度:', audioSimilarity);
     }
     
     // 5. 字體指紋相似度 (權重 10%)
-    if (oldData.fonts && newData.fonts) {
+    if (oldData.fonts && newData.fonts && Object.keys(oldData.fonts).length > 0 && Object.keys(newData.fonts).length > 0) {
         const fontsSimilarity = calculateFontsSimilarity(oldData.fonts, newData.fonts);
         similarities.push(fontsSimilarity);
         weights.push(0.1);
+        console.log('Fonts 相似度:', fontsSimilarity);
     }
     
-    // 6. 硬體指紋相似度 (權重 10%)
-    if (oldData.hardware && newData.hardware) {
+    // 6. 硬體指紋相似度 (權重 5%)
+    if (oldData.hardware && newData.hardware && Object.keys(oldData.hardware).length > 0 && Object.keys(newData.hardware).length > 0) {
         const hardwareSimilarity = calculateHardwareSimilarity(oldData.hardware, newData.hardware);
         similarities.push(hardwareSimilarity);
-        weights.push(0.1);
+        weights.push(0.05);
+        console.log('Hardware 相似度:', hardwareSimilarity);
     }
     
     // 7. 自定義指紋相似度 (權重 5%)
-    if (oldData.custom && newData.custom) {
+    if (oldData.custom && newData.custom && Object.keys(oldData.custom).length > 0 && Object.keys(newData.custom).length > 0) {
         const customSimilarity = calculateCustomSimilarity(oldData.custom, newData.custom);
         similarities.push(customSimilarity);
         weights.push(0.05);
+        console.log('Custom 相似度:', customSimilarity);
     }
     
     if (similarities.length === 0) {
@@ -186,7 +193,8 @@ function calculateMultiFingerprintSimilarity(oldData, newData) {
         weights,
         weightedSum,
         totalWeight,
-        finalSimilarity
+        finalSimilarity,
+        availableTypes: similarities.length
     });
     
     return Math.min(100, Math.max(0, finalSimilarity));
@@ -860,14 +868,14 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
                 // 構建舊的指紋資料結構（適應舊資料庫結構）
                 const oldData = {
                     components: JSON.parse(user.components || '{}'),
-                    // 舊資料庫可能沒有這些欄位，使用空值
-                    canvas: '',
-                    webgl: {},
-                    audio: {},
-                    fonts: {},
-                    plugins: {},
-                    hardware: {},
-                    custom: {}
+                    // 舊資料庫可能沒有這些欄位，但我們可以從 components 中提取相關信息
+                    canvas: '', // 暫時使用空值
+                    webgl: {}, // 暫時使用空值
+                    audio: {}, // 暫時使用空值
+                    fonts: {}, // 暫時使用空值
+                    plugins: {}, // 暫時使用空值
+                    hardware: {}, // 暫時使用空值
+                    custom: {} // 暫時使用空值
                 };
                 
                 // 構建新的指紋資料結構
