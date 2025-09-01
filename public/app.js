@@ -679,9 +679,12 @@ class MultiFingerprintApp {
             });
             
             // 重置 FingerprintJS V4 結果顯示
-            const fingerprintElements = document.querySelectorAll('.fingerprintjs-section .highlight');
-            fingerprintElements.forEach(element => {
-                element.textContent = '尚未採集';
+            const fingerprintIds = ['visitorId', 'confidence', 'version', 'collectionTime'];
+            fingerprintIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = '尚未採集';
+                }
             });
             
             // 重置調試資訊
@@ -699,25 +702,25 @@ class MultiFingerprintApp {
     updateFingerprintJSDisplay(data) {
         try {
             // 更新訪客 ID
-            const visitorIdElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(1) .highlight');
+            const visitorIdElement = document.getElementById('visitorId');
             if (visitorIdElement && data.visitorId) {
                 visitorIdElement.textContent = data.visitorId;
             }
             
             // 更新信心度
-            const confidenceElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(2) .highlight');
+            const confidenceElement = document.getElementById('confidence');
             if (confidenceElement && data.confidence) {
                 confidenceElement.textContent = data.confidence;
             }
             
             // 更新版本
-            const versionElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(3) .highlight');
+            const versionElement = document.getElementById('version');
             if (versionElement && data.version) {
                 versionElement.textContent = data.version;
             }
             
             // 更新採集時間
-            const collectionTimeElement = document.querySelector('.fingerprintjs-section .result-item:nth-child(4) .highlight');
+            const collectionTimeElement = document.getElementById('collectionTime');
             if (collectionTimeElement && data.collectionTime) {
                 collectionTimeElement.textContent = `${data.collectionTime}ms`;
             }
