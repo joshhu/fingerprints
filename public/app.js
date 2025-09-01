@@ -1103,24 +1103,47 @@ class MultiFingerprintApp {
     // 載入數學 CAPTCHA
     async loadCaptcha(type) {
         try {
-            const response = await fetch('/api/captcha');
-            const data = await response.json();
+            console.log(`開始載入 ${type} CAPTCHA...`);
             
-            if (response.ok) {
-                const questionElement = document.getElementById(`${type}CaptchaQuestion`);
-                const inputElement = document.getElementById(`${type}Captcha`);
-                
-                if (questionElement) {
-                    questionElement.textContent = data.question;
-                }
-                if (inputElement) {
-                    inputElement.value = '';
-                }
-            } else {
-                console.error('載入 CAPTCHA 失敗:', data.error);
+            const response = await fetch('/api/captcha');
+            console.log('CAPTCHA API 回應狀態:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
+            
+            const data = await response.json();
+            console.log('CAPTCHA API 回應資料:', data);
+            
+            const questionElement = document.getElementById(`${type}CaptchaQuestion`);
+            const inputElement = document.getElementById(`${type}Captcha`);
+            
+            if (questionElement) {
+                questionElement.textContent = data.question;
+                console.log(`已更新 ${type} CAPTCHA 問題:`, data.question);
+            } else {
+                console.error(`找不到 ${type}CaptchaQuestion 元素`);
+            }
+            
+            if (inputElement) {
+                inputElement.value = '';
+            }
+            
+            // 如果有警告，顯示給用戶
+            if (data.warning) {
+                console.warn('CAPTCHA 警告:', data.warning);
+                // 可以在這裡添加用戶提示
+            }
+            
         } catch (error) {
-            console.error('載入 CAPTCHA 錯誤:', error);
+            console.error(`載入 ${type} CAPTCHA 錯誤:`, error);
+            
+            // 顯示錯誤給用戶
+            const questionElement = document.getElementById(`${type}CaptchaQuestion`);
+            if (questionElement) {
+                questionElement.textContent = '載入失敗，請重試';
+                questionElement.style.color = '#e74c3c';
+            }
         }
     }
 

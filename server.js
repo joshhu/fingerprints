@@ -409,32 +409,43 @@ function isAuthenticated(req, res, next) {
 
 // API 路由：生成數學 CAPTCHA
 app.get('/api/captcha', (req, res) => {
-    const captcha = generateMathCaptcha();
-    
-    // 將答案存儲在 session 中
-    req.session.captchaAnswer = captcha.answer;
-    
-    console.log('生成 CAPTCHA:', {
-        question: captcha.question,
-        answer: captcha.answer,
-        sessionId: req.sessionID,
-        hasCaptchaAnswer: !!req.session.captchaAnswer
-    });
-    
-    // 確保 session 被保存
-    req.session.save((err) => {
-        if (err) {
-            console.error('Session 保存錯誤:', err);
-            return res.status(500).json({ error: '無法生成驗證碼' });
-        }
+    try {
+        const captcha = generateMathCaptcha();
         
-        console.log('CAPTCHA session 保存成功');
+        // 將答案存儲在 session 中
+        req.session.captchaAnswer = captcha.answer;
         
-        res.json({
+        console.log('生成 CAPTCHA:', {
             question: captcha.question,
-            timestamp: Date.now()
+            answer: captcha.answer,
+            sessionId: req.sessionID,
+            hasCaptchaAnswer: !!req.session.captchaAnswer
         });
-    });
+        
+        // 確保 session 被保存
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session 保存錯誤:', err);
+                // 即使 session 保存失敗，也返回 CAPTCHA 問題
+                // 這樣用戶至少可以看到問題，雖然驗證可能失敗
+                return res.json({
+                    question: captcha.question,
+                    timestamp: Date.now(),
+                    warning: 'Session 保存失敗，驗證可能不穩定'
+                });
+            }
+            
+            console.log('CAPTCHA session 保存成功');
+            
+            res.json({
+                question: captcha.question,
+                timestamp: Date.now()
+            });
+        });
+    } catch (error) {
+        console.error('CAPTCHA 生成錯誤:', error);
+        res.status(500).json({ error: '無法生成驗證碼' });
+    }
 });
 
 // 找出變化的元件
