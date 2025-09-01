@@ -890,6 +890,42 @@ class MultiFingerprintApp {
         resultContainer.innerHTML = html;
     }
 
+    // 顯示指紋相似度結果
+    displaySimilarityResults(topMatches) {
+        const resultContainer = document.getElementById('componentsList');
+        
+        if (!resultContainer || !topMatches || topMatches.length === 0) {
+            return;
+        }
+        
+        // 在現有結果下方添加相似度結果
+        const similarityHtml = `
+            <div class="fingerprintjs-section similarity-results">
+                <h3>🔍 相似用戶分析 (前 ${topMatches.length} 名)</h3>
+                <div class="similarity-list">
+                    ${topMatches.map((match, index) => `
+                        <div class="similarity-item ${index === 0 ? 'best-match' : ''}">
+                            <div class="rank">#${index + 1}</div>
+                            <div class="user-info">
+                                <strong>用戶：${match.username}</strong>
+                                <div class="similarity-bar">
+                                    <div class="similarity-fill" style="width: ${match.similarity}%"></div>
+                                    <span class="similarity-percent">${match.similarity.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="similarity-note">
+                    <p><strong>說明：</strong>相似度基於多重指紋技術分析，包含 Canvas、WebGL、音訊、字體、硬體等指紋特徵。</p>
+                </div>
+            </div>
+        `;
+        
+        // 將相似度結果添加到結果容器末尾
+        resultContainer.innerHTML += similarityHtml;
+    }
+
     // 雜湊字串
     hashString(str) {
         let hash = 0;
@@ -937,6 +973,7 @@ class MultiFingerprintApp {
                 } else if (result.isGuest && result.topMatches && result.topMatches.length > 0) {
                     console.log('找到相似用戶:', result.topMatches);
                     this.updateStatus(result.message, 'smart-correlation');
+                    this.displaySimilarityResults(result.topMatches);
                 } else if (result.isGuest) {
                     console.log('新訪客');
                     this.updateStatus(result.message, 'new-user');
@@ -969,6 +1006,7 @@ class MultiFingerprintApp {
         const refreshLoginCaptcha = document.getElementById('refreshLoginCaptcha');
         const refreshRegisterCaptcha = document.getElementById('refreshRegisterCaptcha');
         const logoutBtn = document.getElementById('logoutBtn');
+        const logoutTopBtn = document.getElementById('logoutTopBtn');
 
         collectBtn.addEventListener('click', () => this.showPrivacyModal());
         clearBtn.addEventListener('click', () => this.clearResults());
@@ -983,6 +1021,7 @@ class MultiFingerprintApp {
         refreshLoginCaptcha.addEventListener('click', () => this.loadCaptcha('login'));
         refreshRegisterCaptcha.addEventListener('click', () => this.loadCaptcha('register'));
         logoutBtn.addEventListener('click', () => this.logout());
+        logoutTopBtn.addEventListener('click', () => this.logout());
 
         // 點擊背景關閉彈出視窗
         authModal.addEventListener('click', (e) => {
@@ -1097,6 +1136,9 @@ class MultiFingerprintApp {
         document.getElementById('loginForm').style.display = 'block';
         document.getElementById('registerForm').style.display = 'none';
         modalTitle.textContent = '用戶登入';
+        
+        // 載入登入 CAPTCHA
+        this.loadCaptcha('login');
     }
 
     // 顯示註冊表單
@@ -1189,18 +1231,32 @@ class MultiFingerprintApp {
         const userStatus = document.getElementById('userStatus');
         const toggleAuthBtn = document.getElementById('toggleAuthBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+        const currentUserDisplay = document.getElementById('currentUserDisplay');
+        const guestUserDisplay = document.getElementById('guestUserDisplay');
+        const currentUserName = document.getElementById('currentUserName');
         
         if (userStatus) {
             if (this.currentUser) {
+                // 底部狀態
                 userStatus.textContent = `已登入: ${this.currentUser.username}`;
                 userStatus.className = 'user-status logged-in-user';
                 if (toggleAuthBtn) toggleAuthBtn.style.display = 'none';
                 if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                
+                // 頂部使用者顯示
+                if (currentUserDisplay) currentUserDisplay.style.display = 'block';
+                if (guestUserDisplay) guestUserDisplay.style.display = 'none';
+                if (currentUserName) currentUserName.textContent = this.currentUser.username;
             } else {
+                // 底部狀態
                 userStatus.textContent = '未登入';
                 userStatus.className = 'user-status ready';
                 if (toggleAuthBtn) toggleAuthBtn.style.display = 'inline-block';
                 if (logoutBtn) logoutBtn.style.display = 'none';
+                
+                // 頂部使用者顯示
+                if (currentUserDisplay) currentUserDisplay.style.display = 'none';
+                if (guestUserDisplay) guestUserDisplay.style.display = 'block';
             }
         } else {
             console.warn('找不到 userStatus 元素');

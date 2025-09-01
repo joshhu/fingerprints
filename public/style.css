@@ -483,6 +483,102 @@ header {
     white-space: nowrap;
 }
 
+/* 相似度結果樣式 */
+.similarity-results {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-top: 20px;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.similarity-results h3 {
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.3em;
+}
+
+.similarity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.similarity-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.similarity-item.best-match {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.similarity-item .rank {
+    font-size: 1.5em;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: center;
+}
+
+.similarity-item .user-info {
+    flex: 1;
+}
+
+.similarity-bar {
+    background: rgba(255, 255, 255, 0.2);
+    height: 25px;
+    border-radius: 12px;
+    position: relative;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.similarity-fill {
+    background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 50%, #FFC107 100%);
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.similarity-percent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-size: 0.9em;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.similarity-note {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    font-size: 0.9em;
+    border-left: 4px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 客人資訊樣式 */
+.guest-info {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: white;
+    text-align: center;
+}
+
 /* 彈出視窗樣式 */
 .modal {
     display: none;

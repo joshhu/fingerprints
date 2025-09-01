@@ -98,7 +98,14 @@
                     <p>使用專業級瀏覽器指紋識別技術</p>
                 </div>
                 <div class="user-section" id="userSection">
-                    <!-- 用戶狀態將在這裡顯示 -->
+                    <div id="currentUserDisplay" class="user-info" style="display: none;">
+                        <h4>目前使用者</h4>
+                        <p id="currentUserName">--</p>
+                        <button id="logoutTopBtn" class="logout-btn">登出</button>
+                    </div>
+                    <div id="guestUserDisplay" class="guest-info">
+                        <p>未登入狀態</p>
+                    </div>
                 </div>
             </div>
         </header>

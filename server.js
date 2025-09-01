@@ -795,7 +795,7 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
 
     // 比對現有所有指紋，找出相似度最高的前5個
     db.all(
-        'SELECT f.id, f.visitor_id, f.components, f.linked_user_id, a.username FROM fingerprints f LEFT JOIN accounts a ON f.linked_user_id = a.id',
+        'SELECT f.id, f.visitor_id, f.components, f.canvas_fingerprint, f.webgl_fingerprint, f.audio_fingerprint, f.fonts_fingerprint, f.plugins_fingerprint, f.hardware_fingerprint, f.custom_fingerprint, f.linked_user_id, a.username FROM fingerprints f LEFT JOIN accounts a ON f.linked_user_id = a.id',
         (err, allUsers) => {
             if (err) {
                 console.error('查詢所有指紋錯誤:', err);
@@ -809,13 +809,13 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
                 // 構建舊的指紋資料結構
                 const oldData = {
                     components: JSON.parse(user.components || '{}'),
-                    canvas: user.canvas_fingerprint,
-                    webgl: JSON.parse(user.webgl_fingerprint || '{}'),
-                    audio: JSON.parse(user.audio_fingerprint || '{}'),
-                    fonts: JSON.parse(user.fonts_fingerprint || '{}'),
-                    plugins: JSON.parse(user.plugins_fingerprint || '{}'),
-                    hardware: JSON.parse(user.hardware_fingerprint || '{}'),
-                    custom: JSON.parse(user.custom_fingerprint || '{}')
+                    canvas: user.canvas_fingerprint || '',
+                    webgl: user.webgl_fingerprint ? JSON.parse(user.webgl_fingerprint) : {},
+                    audio: user.audio_fingerprint ? JSON.parse(user.audio_fingerprint) : {},
+                    fonts: user.fonts_fingerprint ? JSON.parse(user.fonts_fingerprint) : {},
+                    plugins: user.plugins_fingerprint ? JSON.parse(user.plugins_fingerprint) : {},
+                    hardware: user.hardware_fingerprint ? JSON.parse(user.hardware_fingerprint) : {},
+                    custom: user.custom_fingerprint ? JSON.parse(user.custom_fingerprint) : {}
                 };
                 
                 // 構建新的指紋資料結構
@@ -849,7 +849,7 @@ function handleGuestUserFingerprint(req, res, visitorId, confidence, version, co
             const top5Matches = similarityResults.slice(0, 5);
 
             // **關鍵：返回前5個最相似的用戶**
-            if (top5Matches.length > 0 && top5Matches[0].similarity >= 30) { // 30% 以上顯示相似度
+            if (top5Matches.length > 0 && top5Matches[0].similarity >= 20) { // 20% 以上顯示相似度
                 console.log(`找到 ${top5Matches.length} 個相似用戶，最高相似度: ${top5Matches[0].similarity.toFixed(1)}%`);
                 
                 // 生成相似度列表訊息
