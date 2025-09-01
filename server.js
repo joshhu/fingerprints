@@ -760,23 +760,15 @@ function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version,
                 
                 const similarity = calculateMultiFingerprintSimilarity(oldData, newData);
                 
+                // 使用更安全的更新語句，只更新存在的欄位
                 db.run(
-                    'UPDATE fingerprints SET visitor_id = ?, confidence_score = ?, confidence_comment = ?, version = ?, components = ?, client_id = ?, custom_fingerprint = ?, canvas_fingerprint = ?, webgl_fingerprint = ?, audio_fingerprint = ?, fonts_fingerprint = ?, plugins_fingerprint = ?, hardware_fingerprint = ?, collection_time = ?, last_seen = CURRENT_TIMESTAMP WHERE linked_user_id = ?',
+                    'UPDATE fingerprints SET visitor_id = ?, confidence_score = ?, confidence_comment = ?, version = ?, components = ?, last_seen = CURRENT_TIMESTAMP WHERE linked_user_id = ?',
                     [
                         visitorId,
                         confidence?.score || 0,
                         confidence?.comment || '',
                         version || '',
                         JSON.stringify(components || {}),
-                        clientId || '',
-                        JSON.stringify(custom || {}),
-                        canvas || '',
-                        JSON.stringify(webgl || {}),
-                        JSON.stringify(audio || {}),
-                        JSON.stringify(fonts || {}),
-                        JSON.stringify(plugins || {}),
-                        JSON.stringify(hardware || {}),
-                        collectionTime || 0,
                         userId
                     ],
                     function(updateErr) {
@@ -801,24 +793,15 @@ function handleLoggedInUserFingerprint(req, res, visitorId, confidence, version,
                     }
                 );
             } else {
-                // 新增指紋記錄
+                // 新增指紋記錄（使用基本欄位）
                 db.run(
-                    'INSERT INTO fingerprints (visitor_id, confidence_score, confidence_comment, version, components, client_id, custom_fingerprint, canvas_fingerprint, webgl_fingerprint, audio_fingerprint, fonts_fingerprint, plugins_fingerprint, hardware_fingerprint, collection_time, linked_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    'INSERT INTO fingerprints (visitor_id, confidence_score, confidence_comment, version, components, linked_user_id) VALUES (?, ?, ?, ?, ?, ?)',
                     [
                         visitorId,
                         confidence?.score || 0,
                         confidence?.comment || '',
                         version || '',
                         JSON.stringify(components || {}),
-                        clientId || '',
-                        JSON.stringify(custom || {}),
-                        canvas || '',
-                        JSON.stringify(webgl || {}),
-                        JSON.stringify(audio || {}),
-                        JSON.stringify(fonts || {}),
-                        JSON.stringify(plugins || {}),
-                        JSON.stringify(hardware || {}),
-                        collectionTime || 0,
                         userId
                     ],
                     function(insertErr) {
