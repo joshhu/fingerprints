@@ -219,6 +219,9 @@ class MultiFingerprintApp {
             // 計算採集時間
             fingerprintData.collectionTime = Date.now() - startTime;
 
+            // 更新系統資訊顯示
+            this.updateSystemInfoDisplay(fingerprintData);
+            
             // 顯示結果
             this.displayMultiFingerprintResults(fingerprintData);
             
@@ -574,6 +577,105 @@ class MultiFingerprintApp {
         return hardware;
     }
 
+    // 更新系統資訊顯示
+    updateSystemInfoDisplay(data) {
+        try {
+            // 更新使用者代理
+            const userAgentElement = document.getElementById('userAgent');
+            if (userAgentElement && data.custom?.userAgent) {
+                userAgentElement.textContent = data.custom.userAgent.substring(0, 50) + '...';
+            }
+            
+            // 更新螢幕解析度
+            const screenResolutionElement = document.getElementById('screenResolution');
+            if (screenResolutionElement && data.custom?.screen) {
+                screenResolutionElement.textContent = `${data.custom.screen.width} × ${data.custom.screen.height}`;
+            }
+            
+            // 更新瀏覽器視窗
+            const viewportSizeElement = document.getElementById('viewportSize');
+            if (viewportSizeElement && data.custom?.window) {
+                viewportSizeElement.textContent = `${data.custom.window.innerWidth} × ${data.custom.window.innerHeight}`;
+            }
+            
+            // 更新時區
+            const timezoneElement = document.getElementById('timezone');
+            if (timezoneElement && data.custom?.timezone) {
+                timezoneElement.textContent = data.custom.timezone;
+            }
+            
+            // 更新語言偏好
+            const languageElement = document.getElementById('language');
+            if (languageElement && data.custom?.language) {
+                languageElement.textContent = data.custom.language;
+            }
+            
+            // 更新作業系統
+            const platformElement = document.getElementById('platform');
+            if (platformElement && data.custom?.platform) {
+                platformElement.textContent = data.custom.platform;
+            }
+            
+            // 更新 CPU 核心數
+            const hardwareConcurrencyElement = document.getElementById('hardwareConcurrency');
+            if (hardwareConcurrencyElement && data.custom?.hardwareConcurrency) {
+                hardwareConcurrencyElement.textContent = `${data.custom.hardwareConcurrency} 核心`;
+            }
+            
+            // 更新裝置記憶體
+            const deviceMemoryElement = document.getElementById('deviceMemory');
+            if (deviceMemoryElement && data.custom?.deviceMemory) {
+                deviceMemoryElement.textContent = `${data.custom.deviceMemory} GB`;
+            }
+            
+            // 更新元件統計
+            const totalComponentsElement = document.getElementById('totalComponents');
+            const successfulComponentsElement = document.getElementById('successfulComponents');
+            const failedComponentsElement = document.getElementById('failedComponents');
+            const averageDurationElement = document.getElementById('averageDuration');
+            
+            if (data.components) {
+                const totalComponents = Object.keys(data.components).length;
+                const successfulComponents = Object.values(data.components).filter(comp => !comp.error).length;
+                const failedComponents = totalComponents - successfulComponents;
+                
+                if (totalComponentsElement) totalComponentsElement.textContent = totalComponents;
+                if (successfulComponentsElement) successfulComponentsElement.textContent = successfulComponents;
+                if (failedComponentsElement) failedComponentsElement.textContent = failedComponents;
+                if (averageDurationElement) averageDurationElement.textContent = `${data.collectionTime}ms`;
+            }
+            
+        } catch (error) {
+            console.error('更新系統資訊顯示失敗:', error);
+        }
+    }
+
+    // 重置系統資訊顯示
+    resetSystemInfoDisplay() {
+        try {
+            const elements = [
+                'userAgent', 'screenResolution', 'viewportSize', 'timezone', 
+                'language', 'platform', 'hardwareConcurrency', 'deviceMemory',
+                'totalComponents', 'successfulComponents', 'failedComponents', 'averageDuration'
+            ];
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (id === 'totalComponents' || id === 'successfulComponents' || id === 'failedComponents') {
+                        element.textContent = '0';
+                    } else if (id === 'averageDuration') {
+                        element.textContent = '0ms';
+                    } else {
+                        element.textContent = '尚未採集';
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('重置系統資訊顯示失敗:', error);
+        }
+    }
+
     // 顯示多重指紋結果
     displayMultiFingerprintResults(data) {
         const resultContainer = document.getElementById('componentsList');
@@ -899,6 +1001,10 @@ class MultiFingerprintApp {
         if (resultContainer) {
             resultContainer.innerHTML = '';
         }
+        
+        // 重置系統資訊顯示
+        this.resetSystemInfoDisplay();
+        
         this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
     }
 
