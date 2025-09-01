@@ -446,6 +446,43 @@ header {
     background: #a8a8a8;
 }
 
+/* CAPTCHA 樣式 */
+.captcha-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.captcha-container span {
+    font-weight: bold;
+    background: #f5f5f5;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    min-width: 100px;
+    text-align: center;
+    font-family: monospace;
+    font-size: 1.1em;
+}
+
+.captcha-container input {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1em;
+}
+
+.btn-small {
+    padding: 6px 12px !important;
+    font-size: 0.9em !important;
+    min-width: auto !important;
+    white-space: nowrap;
+}
+
 /* 彈出視窗樣式 */
 .modal {
     display: none;

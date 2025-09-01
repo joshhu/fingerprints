@@ -4,15 +4,12 @@ class MultiFingerprintApp {
         this.fp = null;
         this.isInitialized = false;
         this.currentUser = null;
-        this.loginRecaptchaId = null;
-        this.registerRecaptchaId = null;
         this.clientId = null;
         this.fingerprintData = {};
         this.bindEvents();
         this.setupRealTimeUpdates();
         this.checkAuthStatus();
         this.init();
-        this.initRecaptcha();
     }
 
     // 初始化應用程式
@@ -969,6 +966,9 @@ class MultiFingerprintApp {
         const authModal = document.getElementById('authModal');
         const agreeBtn = document.getElementById('agreeBtn');
         const disagreeBtn = document.getElementById('disagreeBtn');
+        const refreshLoginCaptcha = document.getElementById('refreshLoginCaptcha');
+        const refreshRegisterCaptcha = document.getElementById('refreshRegisterCaptcha');
+        const logoutBtn = document.getElementById('logoutBtn');
 
         collectBtn.addEventListener('click', () => this.showPrivacyModal());
         clearBtn.addEventListener('click', () => this.clearResults());
@@ -980,6 +980,9 @@ class MultiFingerprintApp {
         closeModalBtn.addEventListener('click', () => this.closeAuthModal());
         agreeBtn.addEventListener('click', () => this.agreeToPrivacy());
         disagreeBtn.addEventListener('click', () => this.disagreeToPrivacy());
+        refreshLoginCaptcha.addEventListener('click', () => this.loadCaptcha('login'));
+        refreshRegisterCaptcha.addEventListener('click', () => this.loadCaptcha('register'));
+        logoutBtn.addEventListener('click', () => this.logout());
 
         // 點擊背景關閉彈出視窗
         authModal.addEventListener('click', (e) => {
@@ -1042,8 +1045,35 @@ class MultiFingerprintApp {
         this.showLoginForm();
         modalTitle.textContent = '用戶登入';
         
+        // 載入登入 CAPTCHA
+        this.loadCaptcha('login');
+        
         authModal.classList.add('show');
         document.body.style.overflow = 'hidden';
+    }
+
+    // 載入數學 CAPTCHA
+    async loadCaptcha(type) {
+        try {
+            const response = await fetch('/api/captcha');
+            const data = await response.json();
+            
+            if (response.ok) {
+                const questionElement = document.getElementById(`${type}CaptchaQuestion`);
+                const inputElement = document.getElementById(`${type}Captcha`);
+                
+                if (questionElement) {
+                    questionElement.textContent = data.question;
+                }
+                if (inputElement) {
+                    inputElement.value = '';
+                }
+            } else {
+                console.error('載入 CAPTCHA 失敗:', data.error);
+            }
+        } catch (error) {
+            console.error('載入 CAPTCHA 錯誤:', error);
+        }
     }
 
     // 關閉認證彈出視窗
@@ -1055,16 +1085,10 @@ class MultiFingerprintApp {
         // 清空表單
         document.getElementById('loginUsername').value = '';
         document.getElementById('loginPassword').value = '';
+        document.getElementById('loginCaptcha').value = '';
         document.getElementById('registerUsername').value = '';
         document.getElementById('registerPassword').value = '';
-        
-        // 重置 reCAPTCHA
-        if (this.loginRecaptchaId !== null) {
-            grecaptcha.reset(this.loginRecaptchaId);
-        }
-        if (this.registerRecaptchaId !== null) {
-            grecaptcha.reset(this.registerRecaptchaId);
-        }
+        document.getElementById('registerCaptcha').value = '';
     }
 
     // 顯示登入表單
@@ -1081,6 +1105,9 @@ class MultiFingerprintApp {
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('registerForm').style.display = 'block';
         modalTitle.textContent = '用戶註冊';
+        
+        // 載入註冊 CAPTCHA
+        this.loadCaptcha('register');
     }
 
     // 清除結果
@@ -1160,13 +1187,20 @@ class MultiFingerprintApp {
     // 更新用戶顯示
     updateUserDisplay() {
         const userStatus = document.getElementById('userStatus');
+        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
         if (userStatus) {
             if (this.currentUser) {
                 userStatus.textContent = `已登入: ${this.currentUser.username}`;
                 userStatus.className = 'user-status logged-in-user';
+                if (toggleAuthBtn) toggleAuthBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'inline-block';
             } else {
                 userStatus.textContent = '未登入';
                 userStatus.className = 'user-status ready';
+                if (toggleAuthBtn) toggleAuthBtn.style.display = 'inline-block';
+                if (logoutBtn) logoutBtn.style.display = 'none';
             }
         } else {
             console.warn('找不到 userStatus 元素');
@@ -1177,19 +1211,17 @@ class MultiFingerprintApp {
     async login() {
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        // 暫時移除 reCAPTCHA 驗證
-        // const recaptchaResponse = grecaptcha.getResponse(this.loginRecaptchaId);
+        const captcha = document.getElementById('loginCaptcha').value;
 
         if (!username || !password) {
             alert('請輸入用戶名和密碼');
             return;
         }
 
-        // 暫時移除 reCAPTCHA 驗證
-        // if (!recaptchaResponse) {
-        //     alert('請完成 reCAPTCHA 驗證');
-        //     return;
-        // }
+        if (!captcha) {
+            alert('請完成驗證碼');
+            return;
+        }
 
         try {
             const response = await fetch('/api/auth/login', {
@@ -1200,7 +1232,7 @@ class MultiFingerprintApp {
                 body: JSON.stringify({
                     username,
                     password,
-                    recaptchaResponse: 'disabled' // 暫時禁用 reCAPTCHA
+                    captcha
                 })
             });
 
@@ -1224,19 +1256,17 @@ class MultiFingerprintApp {
     async register() {
         const username = document.getElementById('registerUsername').value;
         const password = document.getElementById('registerPassword').value;
-        // 暫時移除 reCAPTCHA 驗證
-        // const recaptchaResponse = grecaptcha.getResponse(this.registerRecaptchaId);
+        const captcha = document.getElementById('registerCaptcha').value;
 
         if (!username || !password) {
             alert('請輸入用戶名和密碼');
             return;
         }
 
-        // 暫時移除 reCAPTCHA 驗證
-        // if (!recaptchaResponse) {
-        //     alert('請完成 reCAPTCHA 驗證');
-        //     return;
-        // }
+        if (!captcha) {
+            alert('請完成驗證碼');
+            return;
+        }
 
         try {
             const response = await fetch('/api/auth/register', {
@@ -1247,7 +1277,7 @@ class MultiFingerprintApp {
                 body: JSON.stringify({
                     username,
                     password,
-                    recaptchaResponse: 'disabled' // 暫時禁用 reCAPTCHA
+                    captcha
                 })
             });
 
@@ -1284,20 +1314,6 @@ class MultiFingerprintApp {
         }
     }
 
-    // 初始化 reCAPTCHA
-    initRecaptcha() {
-        if (typeof grecaptcha !== 'undefined') {
-            this.loginRecaptchaId = grecaptcha.render('loginRecaptcha', {
-                sitekey: '6LcQZXYpAAAAAJqXjqXjqXjqXjqXjqXjqXjqXjqXj',
-                callback: () => {}
-            });
-            
-            this.registerRecaptchaId = grecaptcha.render('registerRecaptcha', {
-                sitekey: '6LcQZXYpAAAAAJqXjqXjqXjqXjqXjqXjqXjqXjqXj',
-                callback: () => {}
-            });
-        }
-    }
 }
 
 // 初始化應用程式

@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FingerprintJS V4 指紋採集測試</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Google reCAPTCHA v2 -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     
     <!-- FingerprintJS V4 多重載入方案 -->
     <script>
@@ -113,6 +111,7 @@
             <button id="collectBtn" class="btn btn-primary">開始採集指紋</button>
             <button id="clearBtn" class="btn btn-secondary">清除結果</button>
             <button id="toggleAuthBtn" class="btn btn-secondary">用戶登入/註冊</button>
+            <button id="logoutBtn" class="btn btn-secondary" style="display: none;">登出</button>
         </div>
 
         <div class="result-container">
@@ -247,8 +246,13 @@
                     <label for="loginPassword">密碼：</label>
                     <input type="password" id="loginPassword" placeholder="請輸入密碼">
                 </div>
-                <div class="form-group recaptcha-container">
-                    <div id="loginRecaptcha"></div>
+                <div class="form-group">
+                    <label for="loginCaptcha">驗證碼：</label>
+                    <div class="captcha-container">
+                        <span id="loginCaptchaQuestion">載入中...</span>
+                        <input type="number" id="loginCaptcha" placeholder="請輸入答案">
+                        <button type="button" id="refreshLoginCaptcha" class="btn btn-small">重新生成</button>
+                    </div>
                 </div>
                 <div class="form-buttons">
                     <button id="loginBtn" class="btn btn-primary">登入</button>
@@ -270,8 +274,13 @@
                     <label for="confirmPassword">確認密碼：</label>
                     <input type="password" id="confirmPassword" placeholder="請再次輸入密碼">
                 </div>
-                <div class="form-group recaptcha-container">
-                    <div id="registerRecaptcha"></div>
+                <div class="form-group">
+                    <label for="registerCaptcha">驗證碼：</label>
+                    <div class="captcha-container">
+                        <span id="registerCaptchaQuestion">載入中...</span>
+                        <input type="number" id="registerCaptcha" placeholder="請輸入答案">
+                        <button type="button" id="refreshRegisterCaptcha" class="btn btn-small">重新生成</button>
+                    </div>
                 </div>
                 <div class="form-buttons">
                     <button id="registerBtn" class="btn btn-primary">註冊</button>
