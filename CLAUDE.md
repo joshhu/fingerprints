@@ -81,3 +81,4 @@ node test-fingerprint.js
 - `confidence`：信心度物件 (score, comment)
 - `components`：詳細指紋元件資料
 - `version`：FingerprintJS 版本資訊
+
