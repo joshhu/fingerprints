@@ -1091,12 +1091,33 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: '內部伺服器錯誤' });
 });
 
+// 匯出供測試使用的物件
+module.exports = {
+    app,
+    db,
+    generateMathCaptcha,
+    verifyMathCaptcha,
+    calculateMultiFingerprintSimilarity,
+    calculateFingerprintJSSimilarity,
+    calculateCanvasSimilarity,
+    calculateWebGLSimilarity,
+    calculateAudioSimilarity,
+    calculateFontsSimilarity,
+    calculateHardwareSimilarity,
+    calculateCustomSimilarity,
+    calculateArraySimilarity,
+    hashString,
+    findChangedComponents
+};
+
 // 啟動伺服器
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`伺服器運行在 http://0.0.0.0:${PORT}`);
-    console.log('FingerprintJS V4 指紋採集測試網站已啟動');
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+if (require.main === module) {
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`伺服器運行在 http://0.0.0.0:${PORT}`);
+        console.log('FingerprintJS V4 指紋採集測試網站已啟動');
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+}
 
 // 優雅關閉
 process.on('SIGINT', () => {
