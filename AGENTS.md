@@ -1,22 +1,22 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Source logic resides in `server.js`, which registers Express routes, SQLite models, and helper utilities such as `calculateMultiFingerprintSimilarity`. Public-facing assets under `public/` (including `index.html`, `style.css`, `app.js`, and `lib/fingerprintjs.min.js`) are served as-is, so keep compiled bundles and third-party scripts inside this tree. Fixture artifacts like `fingerprints.db`, `cookies.txt`, and `test_cookies.txt` support manual QA; update or purge them before commits to avoid leaking sensitive data.
+Source logic lives in `server.js`, which wires Express routes, SQLite models, and helpers such as `calculateMultiFingerprintSimilarity`. Public assets reside under `public/` (`index.html`, `style.css`, `app.js`, `lib/fingerprintjs.min.js`) and are served as-is. Puppeteer fixtures (`fingerprints.db`, `cookies.txt`, `test_cookies.txt`) support manual verification—refresh them before sharing to avoid stale or sensitive data.
 
 ## Build, Test, and Development Commands
-- `npm install`: Install Express, sqlite3, nodemon, Puppeteer, and other runtime tooling.
-- `npm run dev`: Launch the hot-reload server at `http://localhost:3000` for day-to-day development.
-- `npm start`: Boot the production server; Render relies on this command in deployment.
-- `node test-fingerprint.js`: Execute the Puppeteer smoke test (start the dev server first).
+- `npm install`: Installs Express, sqlite3, nodemon, Puppeteer, and other required packages.
+- `npm run dev`: Starts the hot-reload server on `http://localhost:3000` for day-to-day changes.
+- `npm start`: Boots the production server, mirroring Render’s deployment entrypoint.
+- `node test-fingerprint.js`: Launches the Puppeteer smoke test; ensure the dev server is already running.
 
 ## Coding Style & Naming Conventions
-Adopt 4-space indentation, single quotes, and trailing semicolons across Node and browser code. Prefer `async/await` for asynchronous flows and keep helpers pure when feasible. Name modules and functions descriptively in English (e.g., `collectFingerprint`, `calculateCanvasSimilarity`), even when UI copy remains Traditional Chinese.
+Use 4-space indentation, single quotes, and trailing semicolons across Node and browser scripts. Favor `async/await` flows and keep helpers pure when feasible. Name modules and functions in clear English (e.g., `collectFingerprint`, `calculateCanvasSimilarity`). Document localized UI copy directly in the front-end assets.
 
 ## Testing Guidelines
-`test-fingerprint.js` houses Puppeteer smoke tests that read fingerprints and log similarity metrics. Extend coverage by extracting reusable launch helpers rather than duplicating `puppeteer.launch` calls. Document manual regression matrices in PR descriptions when scenarios exceed automated coverage.
+`test-fingerprint.js` houses Puppeteer smoke coverage that logs extracted fingerprints and similarity metrics. Extract shared launch helpers instead of duplicating `puppeteer.launch`. Run the test locally before proposing changes and note manual regression matrices when automated coverage is insufficient.
 
 ## Commit & Pull Request Guidelines
-Follow the repository’s Chinese commit format: a concise headline plus optional numbered list separated by a full-width colon (e.g., `修正相似度計算問題：1) 調整閾值 2) 更新測試`). Reference related issues and note any database or configuration updates. Pull requests should explain motivation, list validation steps (commands run, datasets), and include UI screenshots or JSON payloads when responses change.
+Follow the repository’s Chinese commit format, e.g., `修正相似度計算問題：1) 調整閾值 2) 更新測試`. Reference related issues and mention database or configuration adjustments. Pull requests should explain motivation, list validation steps (commands run, datasets), and attach UI screenshots or JSON payloads whenever responses change.
 
 ## Security & Configuration Tips
-Load secrets such as `SESSION_SECRET` and CAPTCHA keys from environment variables; never commit credentials. Rotate SQLite fixtures when schemas change and scrub personal data before sharing. For Render deployments, confirm `PORT`, session cookie settings, and other environment variables align with `server.js` defaults.
+Load secrets like `SESSION_SECRET` and CAPTCHA keys from environment variables; never commit credentials. Confirm `PORT`, session cookie settings, and other environment variables align with the defaults in `server.js`. Rotate SQLite fixtures whenever schemas evolve and scrub personal data before distribution.
