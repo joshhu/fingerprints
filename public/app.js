@@ -1091,7 +1091,7 @@ class MultiFingerprintApp {
         const modalTitle = document.getElementById('modalTitle');
         
         this.showLoginForm();
-        modalTitle.textContent = '用戶登入';
+        modalTitle.textContent = '使用者登入';
         
         // 載入登入 CAPTCHA
         this.loadCaptcha('login');
@@ -1167,7 +1167,7 @@ class MultiFingerprintApp {
         const modalTitle = document.getElementById('modalTitle');
         document.getElementById('loginForm').style.display = 'block';
         document.getElementById('registerForm').style.display = 'none';
-        modalTitle.textContent = '用戶登入';
+        modalTitle.textContent = '使用者登入';
         
         // 載入登入 CAPTCHA
         this.loadCaptcha('login');
@@ -1178,7 +1178,7 @@ class MultiFingerprintApp {
         const modalTitle = document.getElementById('modalTitle');
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('registerForm').style.display = 'block';
-        modalTitle.textContent = '用戶註冊';
+        modalTitle.textContent = '使用者註冊';
         
         // 載入註冊 CAPTCHA
         this.loadCaptcha('register');
@@ -1307,7 +1307,7 @@ class MultiFingerprintApp {
         const captcha = document.getElementById('loginCaptcha').value;
 
         if (!username || !password) {
-            alert('請輸入用戶名和密碼');
+            alert('請輸入使用者名和密碼');
             return;
         }
 
@@ -1352,7 +1352,7 @@ class MultiFingerprintApp {
         const captcha = document.getElementById('registerCaptcha').value;
 
         if (!username || !password) {
-            alert('請輸入用戶名和密碼');
+            alert('請輸入使用者名和密碼');
             return;
         }
 
