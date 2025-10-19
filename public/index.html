@@ -246,8 +246,8 @@
             <!-- 登入表單 -->
             <div class="auth-form" id="loginForm">
                 <div class="form-group">
-                    <label for="loginUsername">用戶名：</label>
-                    <input type="text" id="loginUsername" placeholder="請輸入用戶名">
+                    <label for="loginUsername">用戶名/Email：</label>
+                    <input type="text" id="loginUsername" placeholder="請輸入用戶名或 Email">
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">密碼：</label>
@@ -261,6 +261,12 @@
                         <button type="button" id="refreshLoginCaptcha" class="btn btn-small">重新生成</button>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span>記住我（30 天）</span>
+                    </label>
+                </div>
                 <div class="form-buttons">
                     <button id="loginBtn" class="btn btn-primary">登入</button>
                     <button id="showRegisterBtn" class="btn btn-secondary">註冊新帳號</button>
@@ -271,11 +277,16 @@
             <div class="auth-form" id="registerForm" style="display: none;">
                 <div class="form-group">
                     <label for="registerUsername">用戶名：</label>
-                    <input type="text" id="registerUsername" placeholder="請輸入用戶名">
+                    <input type="text" id="registerUsername" placeholder="請輸入用戶名（必填）">
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email：</label>
+                    <input type="email" id="registerEmail" placeholder="請輸入 Email（選填）">
+                    <small class="form-hint">可用於登入和找回密碼</small>
                 </div>
                 <div class="form-group">
                     <label for="registerPassword">密碼：</label>
-                    <input type="password" id="registerPassword" placeholder="請輸入密碼">
+                    <input type="password" id="registerPassword" placeholder="請輸入密碼（至少 6 個字元）">
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword">確認密碼：</label>

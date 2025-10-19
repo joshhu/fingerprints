@@ -1152,14 +1152,23 @@ class MultiFingerprintApp {
         const authModal = document.getElementById('authModal');
         authModal.classList.remove('show');
         document.body.style.overflow = '';
-        
+
         // 清空表單
         document.getElementById('loginUsername').value = '';
         document.getElementById('loginPassword').value = '';
         document.getElementById('loginCaptcha').value = '';
+        document.getElementById('rememberMe').checked = false;
         document.getElementById('registerUsername').value = '';
+        document.getElementById('registerEmail').value = '';
         document.getElementById('registerPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
         document.getElementById('registerCaptcha').value = '';
+
+        // 清除錯誤/成功訊息
+        const errorDiv = document.getElementById('formErrorMessage');
+        const successDiv = document.getElementById('formSuccessMessage');
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (successDiv) successDiv.style.display = 'none';
     }
 
     // 顯示登入表單
@@ -1302,17 +1311,18 @@ class MultiFingerprintApp {
 
     // 登入
     async login() {
-        const username = document.getElementById('loginUsername').value;
+        const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value;
         const captcha = document.getElementById('loginCaptcha').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
 
         if (!username || !password) {
-            alert('請輸入用戶名和密碼');
+            this.showFormError('請輸入用戶名/Email 和密碼');
             return;
         }
 
         if (!captcha) {
-            alert('請完成驗證碼');
+            this.showFormError('請完成驗證碼');
             return;
         }
 
@@ -1325,39 +1335,70 @@ class MultiFingerprintApp {
                 body: JSON.stringify({
                     username,
                     password,
-                    captcha
+                    captcha,
+                    rememberMe
                 })
             });
 
             const data = await response.json();
-            
+
             if (response.ok) {
                 this.currentUser = data.user;
                 this.updateUserDisplay();
                 this.closeAuthModal();
-                this.updateStatus(`歡迎回來，${data.user.username}！`, 'logged-in-user');
+                const rememberText = rememberMe ? '（已啟用記住我）' : '';
+                this.showSuccess(`歡迎回來，${data.user.username}！${rememberText}`);
             } else {
-                alert(data.error || '登入失敗');
+                this.showFormError(data.error || '登入失敗');
+                // 刷新驗證碼
+                this.loadCaptcha('login');
             }
         } catch (error) {
             console.error('登入失敗:', error);
-            alert('登入失敗: ' + error.message);
+            this.showFormError('登入失敗: ' + error.message);
         }
     }
 
     // 註冊
     async register() {
-        const username = document.getElementById('registerUsername').value;
+        const username = document.getElementById('registerUsername').value.trim();
+        const email = document.getElementById('registerEmail').value.trim();
         const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
         const captcha = document.getElementById('registerCaptcha').value;
 
+        // 表單驗證
         if (!username || !password) {
-            alert('請輸入用戶名和密碼');
+            this.showFormError('請輸入用戶名和密碼');
             return;
         }
 
+        if (username.length < 3) {
+            this.showFormError('用戶名至少需要 3 個字元');
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showFormError('密碼至少需要 6 個字元');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            this.showFormError('兩次輸入的密碼不一致');
+            return;
+        }
+
+        // 驗證 email 格式（如果填寫）
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                this.showFormError('Email 格式不正確');
+                return;
+            }
+        }
+
         if (!captcha) {
-            alert('請完成驗證碼');
+            this.showFormError('請完成驗證碼');
             return;
         }
 
@@ -1369,24 +1410,34 @@ class MultiFingerprintApp {
                 },
                 body: JSON.stringify({
                     username,
+                    email: email || null,
                     password,
                     captcha
                 })
             });
 
             const data = await response.json();
-            
+
             if (response.ok) {
-                this.currentUser = data.user;
-                this.updateUserDisplay();
-                this.closeAuthModal();
-                this.updateStatus(`註冊成功，歡迎 ${data.user.username}！`, 'logged-in-user');
+                // 註冊成功後自動登入
+                this.showSuccess('註冊成功！正在為您登入...');
+
+                // 等待一下再關閉
+                setTimeout(() => {
+                    this.closeAuthModal();
+                    this.showLoginForm();
+                    // 預填用戶名
+                    document.getElementById('loginUsername').value = username;
+                    this.showAuthModal();
+                }, 1500);
             } else {
-                alert(data.error || '註冊失敗');
+                this.showFormError(data.error || '註冊失敗');
+                // 刷新驗證碼
+                this.loadCaptcha('register');
             }
         } catch (error) {
             console.error('註冊失敗:', error);
-            alert('註冊失敗: ' + error.message);
+            this.showFormError('註冊失敗: ' + error.message);
         }
     }
 
@@ -1405,6 +1456,58 @@ class MultiFingerprintApp {
         } catch (error) {
             console.error('登出失敗:', error);
         }
+    }
+
+    // 顯示表單錯誤訊息（改進的 UI）
+    showFormError(message) {
+        // 創建或更新錯誤訊息元素
+        let errorDiv = document.getElementById('formErrorMessage');
+
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.id = 'formErrorMessage';
+            errorDiv.className = 'form-error-message';
+
+            const modalBody = document.querySelector('.auth-form:not([style*="display: none"])');
+            if (modalBody) {
+                modalBody.insertBefore(errorDiv, modalBody.firstChild);
+            }
+        }
+
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+
+        // 3 秒後自動隱藏
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // 顯示成功訊息
+    showSuccess(message) {
+        this.updateStatus(message, 'logged-in-user');
+
+        // 也可以在模態框中顯示
+        let successDiv = document.getElementById('formSuccessMessage');
+
+        if (!successDiv) {
+            successDiv = document.createElement('div');
+            successDiv.id = 'formSuccessMessage';
+            successDiv.className = 'form-success-message';
+
+            const modalBody = document.querySelector('.auth-form:not([style*="display: none"])');
+            if (modalBody) {
+                modalBody.insertBefore(successDiv, modalBody.firstChild);
+            }
+        }
+
+        successDiv.textContent = message;
+        successDiv.style.display = 'block';
+
+        // 3 秒後自動隱藏
+        setTimeout(() => {
+            successDiv.style.display = 'none';
+        }, 3000);
     }
 
 }
