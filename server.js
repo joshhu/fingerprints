@@ -98,6 +98,7 @@ db.serialize(() => {
         CREATE TABLE IF NOT EXISTS accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE,
             password_hash TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             last_login DATETIME
@@ -489,11 +490,19 @@ function findChangedComponents(oldComponents, newComponents) {
 
 // API 路由：用戶註冊
 app.post('/api/auth/register', async (req, res) => {
-    const { username, password, captcha } = req.body;
-    
+    const { username, email, password, captcha } = req.body;
+
     // 驗證輸入
     if (!username || !password) {
         return res.status(400).json({ error: '請填寫所有欄位' });
+    }
+
+    // 驗證 email 格式（如果提供）
+    if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Email 格式不正確' });
+        }
     }
     
     // 驗證數學 CAPTCHA
@@ -537,33 +546,54 @@ app.post('/api/auth/register', async (req, res) => {
                 console.error('檢查用戶錯誤:', err);
                 return res.status(500).json({ error: '系統錯誤' });
             }
-            
+
             if (existingUser) {
                 return res.status(400).json({ error: '使用者名稱已存在' });
             }
-            
-            // 加密密碼
-            const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
-            
-            // 建立新用戶
-            db.run(
-                'INSERT INTO accounts (username, password_hash) VALUES (?, ?)',
-                [username, hashedPassword],
-                function(insertErr) {
-                    if (insertErr) {
-                        console.error('建立用戶錯誤:', insertErr);
-                        return res.status(500).json({ error: '註冊失敗' });
+
+            // 如果提供了 email，檢查是否已存在
+            if (email) {
+                db.get('SELECT id FROM accounts WHERE email = ?', [email], async (emailErr, existingEmail) => {
+                    if (emailErr) {
+                        console.error('檢查 email 錯誤:', emailErr);
+                        return res.status(500).json({ error: '系統錯誤' });
                     }
-                    
-                    console.log('新用戶註冊成功:', { id: this.lastID, username });
-                    res.json({
-                        success: true,
-                        message: '註冊成功！',
-                        userId: this.lastID
-                    });
-                }
-            );
+
+                    if (existingEmail) {
+                        return res.status(400).json({ error: 'Email 已被使用' });
+                    }
+
+                    // 繼續註冊流程
+                    await createUser();
+                });
+            } else {
+                await createUser();
+            }
+
+            async function createUser() {
+                // 加密密碼
+                const saltRounds = 10;
+                const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+                // 建立新用戶
+                db.run(
+                    'INSERT INTO accounts (username, email, password_hash) VALUES (?, ?, ?)',
+                    [username, email || null, hashedPassword],
+                    function(insertErr) {
+                        if (insertErr) {
+                            console.error('建立用戶錯誤:', insertErr);
+                            return res.status(500).json({ error: '註冊失敗' });
+                        }
+
+                        console.log('新用戶註冊成功:', { id: this.lastID, username, email });
+                        res.json({
+                            success: true,
+                            message: '註冊成功！',
+                            userId: this.lastID
+                        });
+                    }
+                );
+            }
         });
     } catch (error) {
         console.error('註冊錯誤:', error);
@@ -573,72 +603,82 @@ app.post('/api/auth/register', async (req, res) => {
 
 // API 路由：用戶登入
 app.post('/api/auth/login', async (req, res) => {
-    const { username, password, captcha } = req.body;
-    
+    const { username, password, captcha, rememberMe } = req.body;
+
     if (!username || !password) {
-        return res.status(400).json({ error: '請輸入使用者名稱和密碼' });
+        return res.status(400).json({ error: '請輸入使用者名稱/Email 和密碼' });
     }
-    
+
     // 驗證數學 CAPTCHA
     if (!captcha) {
         return res.status(400).json({ error: '請完成驗證碼' });
     }
-    
+
     console.log('登入驗證 CAPTCHA:', {
         userInput: captcha,
         sessionCaptchaAnswer: req.session.captchaAnswer,
         sessionId: req.sessionID,
         hasSession: !!req.session
     });
-    
+
     if (!req.session.captchaAnswer) {
         console.log('登入 CAPTCHA 驗證失敗：session 中沒有 captchaAnswer');
         return res.status(400).json({ error: '驗證碼已過期，請重新載入' });
     }
-    
+
     const captchaValid = verifyMathCaptcha(req.session.captchaAnswer, captcha);
     if (!captchaValid) {
         console.log('登入 CAPTCHA 驗證失敗：答案不匹配');
         return res.status(400).json({ error: '驗證碼錯誤，請重試' });
     }
-    
+
     // 清除已使用的 CAPTCHA
     delete req.session.captchaAnswer;
-    
-    // 查找用戶
-    db.get('SELECT * FROM accounts WHERE username = ?', [username], async (err, user) => {
+
+    // 查找用戶（支援 username 或 email）
+    const query = 'SELECT * FROM accounts WHERE username = ? OR email = ?';
+    db.get(query, [username, username], async (err, user) => {
         if (err) {
             console.error('登入查詢錯誤:', err);
             return res.status(500).json({ error: '登入失敗' });
         }
-        
+
         if (!user) {
-            return res.status(401).json({ error: '使用者名稱或密碼錯誤' });
+            return res.status(401).json({ error: '使用者名稱/Email 或密碼錯誤' });
         }
-        
+
         try {
             // 驗證密碼
             const passwordMatch = await bcrypt.compare(password, user.password_hash);
-            
+
             if (!passwordMatch) {
-                return res.status(401).json({ error: '使用者名稱或密碼錯誤' });
+                return res.status(401).json({ error: '使用者名稱/Email 或密碼錯誤' });
             }
-            
+
             // 設定 session
             req.session.userId = user.id;
             req.session.username = user.username;
-            
+
+            // 如果勾選「記住我」，延長 cookie 有效期到 30 天
+            if (rememberMe) {
+                req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 天
+                console.log('啟用「記住我」功能，session 有效期延長至 30 天');
+            } else {
+                req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 天（預設）
+            }
+
             // 更新最後登入時間
             db.run('UPDATE accounts SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
-            
-            console.log('用戶登入成功:', { id: user.id, username: user.username });
-            
+
+            console.log('用戶登入成功:', { id: user.id, username: user.username, rememberMe: !!rememberMe });
+
             res.json({
                 success: true,
                 message: '登入成功！',
                 user: {
                     id: user.id,
-                    username: user.username
+                    username: user.username,
+                    email: user.email
                 }
             });
         } catch (error) {

@@ -778,3 +778,72 @@ header {
         transform: scale(0.7);
     }
 }
+
+/* 表單錯誤訊息樣式 */
+.form-error-message {
+    background: #fee;
+    color: #c33;
+    border: 2px solid #fcc;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+    animation: slideIn 0.3s ease;
+}
+
+/* 表單成功訊息樣式 */
+.form-success-message {
+    background: #efe;
+    color: #3c3;
+    border: 2px solid #cfc;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+    animation: slideIn 0.3s ease;
+}
+
+/* 表單提示樣式 */
+.form-hint {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Checkbox 樣式 */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+.checkbox-label span {
+    font-weight: normal;
+    color: #555;
+}
+
+/* 滑入動畫 */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
