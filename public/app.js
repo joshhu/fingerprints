@@ -1512,6 +1512,76 @@ class MultiFingerprintApp {
 
 }
 
+// 主題管理器
+class ThemeManager {
+    constructor() {
+        this.theme = this.getStoredTheme() || 'light';
+        this.button = null;
+        this.icon = null;
+        this.init();
+    }
+
+    init() {
+        // 等待 DOM 載入
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setup());
+        } else {
+            this.setup();
+        }
+    }
+
+    setup() {
+        // 應用儲存的主題
+        this.applyTheme(this.theme);
+
+        // 綁定切換按鈕
+        this.button = document.getElementById('themeToggle');
+        this.icon = this.button?.querySelector('.theme-toggle-icon');
+
+        if (this.button) {
+            this.button.addEventListener('click', () => this.toggleTheme());
+        }
+    }
+
+    getStoredTheme() {
+        try {
+            return localStorage.getItem('theme');
+        } catch (error) {
+            console.warn('無法讀取主題設定:', error);
+            return null;
+        }
+    }
+
+    setStoredTheme(theme) {
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (error) {
+            console.warn('無法儲存主題設定:', error);
+        }
+    }
+
+    applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        this.theme = theme;
+        this.updateIcon();
+        this.setStoredTheme(theme);
+    }
+
+    toggleTheme() {
+        const newTheme = this.theme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
+    }
+
+    updateIcon() {
+        if (this.icon) {
+            this.icon.textContent = this.theme === 'light' ? '🌙' : '☀️';
+        }
+    }
+}
+
+// 初始化主題管理器（立即執行）
+const themeManager = new ThemeManager();
+
 // 初始化應用程式
 document.addEventListener('DOMContentLoaded', () => {
     new MultiFingerprintApp();

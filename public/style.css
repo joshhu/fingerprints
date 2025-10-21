@@ -1,3 +1,51 @@
+/* CSS 變數 - Light Theme */
+:root {
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #764ba2;
+    --text-primary: #333;
+    --text-secondary: #555;
+    --text-light: #888;
+    --bg-white: #ffffff;
+    --bg-light: #f8f9fa;
+    --bg-lighter: #ecf0f1;
+    --border-color: #e1e8ed;
+    --border-light: #e9ecef;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --card-bg: #ffffff;
+    --code-bg: #34495e;
+    --code-text: #ecf0f1;
+    --debug-bg: #2c3e50;
+    --component-bg: #f8f9fa;
+    --component-border: #dee2e6;
+    --input-border: #e1e8ed;
+    --scrollbar-track: #f1f1f1;
+    --scrollbar-thumb: #c1c1c1;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-gradient-start: #1a1a2e;
+    --bg-gradient-end: #16213e;
+    --text-primary: #e4e4e7;
+    --text-secondary: #a1a1aa;
+    --text-light: #71717a;
+    --bg-white: #27272a;
+    --bg-light: #18181b;
+    --bg-lighter: #3f3f46;
+    --border-color: #3f3f46;
+    --border-light: #52525b;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --card-bg: #27272a;
+    --code-bg: #18181b;
+    --code-text: #e4e4e7;
+    --debug-bg: #18181b;
+    --component-bg: #3f3f46;
+    --component-border: #52525b;
+    --input-border: #52525b;
+    --scrollbar-track: #27272a;
+    --scrollbar-thumb: #52525b;
+}
+
 /* 基本樣式 */
 * {
     margin: 0;
@@ -8,9 +56,10 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -89,12 +138,12 @@ header {
 
 /* 使用者狀態 */
 .user-status {
-    background: white;
+    background: var(--card-bg);
     border-radius: 10px;
     padding: 15px 20px;
     margin-bottom: 20px;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px var(--shadow-color);
     transition: all 0.3s ease;
 }
 
@@ -176,17 +225,17 @@ header {
 
 /* 結果容器 */
 .result-container {
-    background: white;
+    background: var(--card-bg);
     border-radius: 15px;
     padding: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px var(--shadow-color);
 }
 
 .result-container h2 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 25px;
     font-size: 1.8rem;
-    border-bottom: 2px solid #ecf0f1;
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 10px;
 }
 
@@ -234,32 +283,32 @@ header {
 
 /* 元件詳細資料 */
 .components-section {
-    background: #f8f9fa;
+    background: var(--bg-light);
     border-radius: 10px;
     padding: 25px;
     margin-bottom: 30px;
 }
 
 .components-section h3 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 20px;
     font-size: 1.4rem;
 }
 
 .components-section .detail-item {
-    color: #333;
-    border-bottom: 1px solid #e9ecef;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .components-section .detail-item span {
-    background: white;
-    border: 1px solid #dee2e6;
-    color: #495057;
+    background: var(--card-bg);
+    border: 1px solid var(--component-border);
+    color: var(--text-secondary);
 }
 
 /* 元件列表 */
 .components-list h3 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 20px;
     font-size: 1.4rem;
 }
@@ -272,12 +321,12 @@ header {
 }
 
 .component-item {
-    background: #f8f9fa;
+    background: var(--component-bg);
     border-radius: 8px;
     padding: 15px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--component-border);
     transition: all 0.3s ease;
-    color: #495057;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -292,12 +341,12 @@ header {
     align-items: center;
     margin-bottom: 10px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid var(--component-border);
 }
 
 .component-name {
     font-weight: 600;
-    color: #495057;
+    color: var(--text-secondary);
     font-family: 'Courier New', monospace;
 }
 
@@ -325,16 +374,16 @@ header {
 }
 
 .component-value {
-    background: white;
+    background: var(--card-bg);
     border-radius: 4px;
     padding: 10px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--component-border);
 }
 
 .component-value pre {
     margin: 0;
     font-size: 0.85rem;
-    color: #495057;
+    color: var(--text-secondary);
     white-space: pre-wrap;
     word-break: break-word;
     max-height: 100px;
@@ -343,8 +392,8 @@ header {
 
 /* 調試資訊 */
 .debug-section {
-    background: #2c3e50;
-    color: #ecf0f1;
+    background: var(--debug-bg);
+    color: var(--code-text);
     border-radius: 10px;
     padding: 25px;
     margin-top: 30px;
@@ -353,11 +402,11 @@ header {
 .debug-section h3 {
     margin-bottom: 15px;
     font-size: 1.4rem;
-    color: #ecf0f1;
+    color: var(--code-text);
 }
 
 #debugOutput {
-    background: #34495e;
+    background: var(--code-bg);
     border-radius: 6px;
     padding: 15px;
     font-family: 'Courier New', monospace;
@@ -367,7 +416,7 @@ header {
     word-break: break-word;
     max-height: 200px;
     overflow-y: auto;
-    border: 1px solid #4a5f7a;
+    border: 1px solid var(--border-color);
 }
 
 /* 動畫效果 */
@@ -433,12 +482,12 @@ header {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--scrollbar-track);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
@@ -456,24 +505,27 @@ header {
 
 .captcha-container span {
     font-weight: bold;
-    background: #f5f5f5;
+    background: var(--bg-light);
     padding: 8px 12px;
     border-radius: 5px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     min-width: 100px;
     text-align: center;
     font-family: monospace;
     font-size: 1.1em;
+    color: var(--text-primary);
 }
 
 .captcha-container input {
     flex: 1;
     min-width: 80px;
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--input-border);
     border-radius: 5px;
     text-align: center;
     font-size: 1em;
+    background: var(--card-bg);
+    color: var(--text-primary);
 }
 
 .btn-small {
@@ -600,7 +652,7 @@ header {
 }
 
 .modal-content {
-    background: white;
+    background: var(--card-bg);
     border-radius: 15px;
     padding: 0;
     width: 90%;
@@ -659,7 +711,7 @@ header {
 .modal-body p {
     margin: 0;
     font-size: 1.1rem;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .modal-footer {
@@ -689,16 +741,18 @@ header {
     display: block;
     margin-bottom: 5px;
     font-weight: 600;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .form-group input {
     width: 100%;
     padding: 10px 15px;
-    border: 2px solid #e1e8ed;
+    border: 2px solid var(--input-border);
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.3s ease;
+    background: var(--card-bg);
+    color: var(--text-primary);
 }
 
 .form-group input:focus {
@@ -811,7 +865,7 @@ header {
 .form-hint {
     display: block;
     font-size: 12px;
-    color: #888;
+    color: var(--text-light);
     margin-top: 5px;
     font-style: italic;
 }
@@ -833,7 +887,7 @@ header {
 
 .checkbox-label span {
     font-weight: normal;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 /* 滑入動畫 */
@@ -845,5 +899,65 @@ header {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* 主題切換按鈕樣式 */
+.theme-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+.theme-toggle-icon {
+    font-size: 24px;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover .theme-toggle-icon {
+    transform: rotate(20deg);
+}
+
+[data-theme="dark"] .theme-toggle {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .theme-toggle {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .theme-toggle-icon {
+        font-size: 20px;
     }
 }
